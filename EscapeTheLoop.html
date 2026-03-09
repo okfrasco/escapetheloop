@@ -1,0 +1,2588 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escape the Loop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+<style>
+:root {
+  --music-1: #6d28d9; --music-2: #a855f7; --music-3: #e9d5ff;
+  --creative-1: #047857; --creative-2: #10b981; --creative-3: #d1fae5;
+  --admin-1: #64748b; --admin-2: #94a3b8; --admin-3: #f1f5f9;
+  --community-1: #ea580c; --community-2: #f97316; --community-3: #ffedd5;
+  --arrange-1: #0891b2; --arrange-2: #06b6d4; --arrange-3: #cffafe;
+  --strategy-1: #be185d; --strategy-2: #ec4899; --strategy-3: #fce7f3;
+  --bg: #f8f7ff; --surface: #ffffff; --border: #e5e7eb;
+  --text: #111827; --text-muted: #6b7280; --text-light: #9ca3af;
+  --radius: 16px; --radius-sm: 10px; --radius-xs: 6px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.14);
+  --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+
+/* HEADER */
+header{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);background:rgba(255,255,255,0.92)}
+.header-inner{max-width:1440px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;gap:24px}
+.logo{font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--music-1),var(--creative-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.5px;flex-shrink:0}
+.logo span{font-weight:300;font-size:0.9em}
+
+/* NAV */
+nav{display:flex;gap:4px;flex:1;align-items:center}
+.nav-main{display:flex;gap:4px}
+.nav-tab{padding:8px 20px;border-radius:50px;border:none;cursor:pointer;font-family:inherit;font-size:0.875rem;font-weight:500;transition:var(--transition);background:transparent;color:var(--text-muted)}
+.nav-tab:hover{color:var(--text);background:#f3f4f6}
+.nav-tab.active-music{background:var(--music-3);color:var(--music-1);font-weight:600}
+.nav-tab.active-creative{background:var(--creative-3);color:var(--creative-1);font-weight:600}
+.nav-tab.active-community{background:var(--community-3);color:var(--community-1);font-weight:600}
+.nav-tab.active-arrangements{background:var(--arrange-3);color:var(--arrange-1);font-weight:600}
+.nav-tab.active-strategies{background:var(--strategy-3);color:var(--strategy-1);font-weight:600}
+.nav-tab.active-profile{background:#fef3c7;color:#d97706;font-weight:600}
+.dot-profile{background:#f59e0b}
+.nav-tab .tab-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+.dot-music{background:var(--music-2)}
+.dot-creative{background:var(--creative-2)}
+.dot-community{background:var(--community-2)}
+.dot-arrangements{background:var(--arrange-2)}
+.dot-strategies{background:var(--strategy-2)}
+.nav-admin-wrapper{margin-left:auto;display:flex;align-items:center;gap:12px}
+.nav-tab-admin{padding:5px 12px;border-radius:50px;border:1px solid var(--border);cursor:pointer;font-family:inherit;font-size:0.7rem;font-weight:500;transition:var(--transition);background:transparent;color:var(--text-light)}
+.nav-tab-admin:hover{background:#f3f4f6;color:var(--text-muted)}
+.nav-tab-admin.active-admin{background:var(--admin-1);color:#fff;border-color:var(--admin-1)}
+.lang-toggle{display:flex;background:#f3f4f6;border-radius:50px;padding:3px;gap:2px}
+.lang-btn{padding:5px 14px;border:none;cursor:pointer;border-radius:50px;font-family:inherit;font-size:0.8rem;font-weight:600;transition:var(--transition);background:transparent;color:var(--text-muted)}
+.lang-btn.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+
+/* SECTIONS */
+.section{display:none;max-width:1440px;margin:0 auto;padding:40px 24px 80px}
+.section.visible{display:block}
+.section-header{margin-bottom:36px}
+.section-title{font-size:2rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:6px}
+.section-title.music-title{background:linear-gradient(135deg,var(--music-1),var(--music-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.section-title.creative-title{background:linear-gradient(135deg,var(--creative-1),var(--creative-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.section-title.community-title{background:linear-gradient(135deg,var(--community-1),var(--community-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.section-title.arrangements-title{background:linear-gradient(135deg,var(--arrange-1),var(--arrange-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.section-title.strategies-title{background:linear-gradient(135deg,var(--strategy-1),var(--strategy-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.section-subtitle{color:var(--text-muted);font-size:1rem}
+.stats-bar{display:inline-flex;align-items:center;gap:20px;background:var(--surface);border:1px solid var(--border);border-radius:50px;padding:10px 20px;margin-bottom:32px;box-shadow:var(--shadow)}
+.stat-item{font-size:0.875rem;color:var(--text-muted)}
+.stat-item strong{color:var(--text);font-weight:700}
+.stat-sep{color:var(--border);font-size:1.2rem}
+
+/* GENERATORS */
+.generators{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:40px}
+.gen-card{border-radius:var(--radius);padding:28px;color:#fff;position:relative;overflow:hidden}
+.gen-card::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.08)}
+.gen-card-music-a{background:linear-gradient(135deg,#7c3aed,#a855f7)}
+.gen-card-music-b{background:linear-gradient(135deg,#4f46e5,#6d28d9)}
+.gen-card-creative-a{background:linear-gradient(135deg,#059669,#10b981)}
+.gen-card-creative-b{background:linear-gradient(135deg,#0284c7,#0ea5e9)}
+.gen-card-creative-c{background:linear-gradient(135deg,#d97706,#f59e0b);color:#1c1917}
+.gen-label{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.75;margin-bottom:8px}
+.gen-title{font-size:1.1rem;font-weight:700;margin-bottom:16px}
+.gen-result{background:rgba(255,255,255,0.15);border-radius:var(--radius-sm);padding:16px;min-height:80px;display:flex;flex-direction:column;gap:6px;justify-content:center;margin-bottom:16px}
+.gen-result-cat{font-size:0.7rem;opacity:0.8;font-weight:600;text-transform:uppercase}
+.gen-result-name{font-size:1.1rem;font-weight:700}
+.gen-result-desc{font-size:0.8rem;opacity:0.85}
+.gen-step{background:rgba(255,255,255,0.15);border-radius:var(--radius-xs);padding:10px 12px;border-left:3px solid rgba(255,255,255,0.5);display:flex;gap:8px;align-items:flex-start;font-size:0.875rem}
+.gen-step-num{font-weight:700;flex-shrink:0;opacity:0.7;font-size:0.8rem}
+.gen-step-content{flex:1}
+.gen-step-name{font-weight:600}
+.gen-step-desc{font-size:0.78rem;opacity:0.85}
+.gen-hint{background:rgba(255,255,255,0.12);border-radius:var(--radius-xs);padding:10px;font-size:0.82rem;border-left:3px solid rgba(255,255,255,0.4);margin-top:8px}
+.gen-btn{background:#fff;border:none;padding:10px 24px;border-radius:50px;font-family:inherit;font-size:0.875rem;font-weight:700;cursor:pointer;transition:var(--transition);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+.gen-card-music-a .gen-btn{color:var(--music-1)}
+.gen-card-music-b .gen-btn{color:#4f46e5}
+.gen-card-creative-a .gen-btn{color:var(--creative-1)}
+.gen-card-creative-b .gen-btn{color:#0284c7}
+.gen-card-creative-c .gen-btn{color:#d97706;background:#fff}
+.gen-card-creative-c .gen-result{background:rgba(0,0,0,0.08)}
+.gen-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.2)}
+.steps-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+
+/* FILTER */
+.filter-section{margin-bottom:28px}
+.filter-label{font-size:0.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px}
+.filter-pills{display:flex;gap:8px;flex-wrap:wrap}
+.filter-pill{padding:7px 16px;border-radius:50px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-muted);font-family:inherit;font-size:0.82rem;font-weight:500;cursor:pointer;transition:var(--transition)}
+.filter-pill:hover{border-color:currentColor}
+.filter-pill.active-music{background:var(--music-1);color:#fff;border-color:var(--music-1)}
+.filter-pill.active-creative{background:var(--creative-1);color:#fff;border-color:var(--creative-1)}
+
+/* CARDS */
+.cats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.cat-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;transition:var(--transition)}
+.cat-card:hover{border-color:var(--accent,var(--music-2));box-shadow:var(--shadow)}
+.cat-card-music{--accent:var(--music-2)}
+.cat-card-creative{--accent:var(--creative-2)}
+.cat-card-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1.5px solid #f3f4f6}
+.cat-emoji{font-size:1.4rem}
+.cat-card-title{font-size:0.95rem;font-weight:700}
+.op-item{padding:8px 10px;margin:4px 0;background:#f8f9fa;border-radius:var(--radius-xs);cursor:pointer;transition:var(--transition)}
+.cat-card-music .op-item:hover{background:var(--music-1);color:#fff;transform:translateX(4px)}
+.cat-card-creative .op-item:hover{background:var(--creative-1);color:#fff;transform:translateX(4px)}
+.op-name{font-weight:600;font-size:0.875rem;display:block;margin-bottom:2px}
+.op-desc{font-size:0.78rem;opacity:0.7}
+
+/* COMMUNITY */
+.idea-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;transition:var(--transition)}
+.idea-card:hover{border-color:var(--community-2);box-shadow:var(--shadow)}
+.idea-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.idea-title{font-size:1rem;font-weight:700}
+.idea-author{font-size:0.75rem;color:var(--text-muted);background:#f3f4f6;padding:4px 10px;border-radius:50px}
+.idea-content{font-size:0.9rem;line-height:1.7;margin-bottom:12px}
+.idea-tags{display:flex;gap:6px;flex-wrap:wrap}
+.idea-tag{font-size:0.72rem;padding:4px 10px;background:var(--community-3);color:var(--community-1);border-radius:50px;font-weight:500}
+.idea-votes{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.vote-btn{background:none;border:1px solid var(--border);border-radius:50px;padding:6px 14px;font-size:0.8rem;cursor:pointer;transition:var(--transition);display:flex;align-items:center;gap:4px}
+.vote-btn:hover{background:var(--community-3);border-color:var(--community-2)}
+.vote-btn.voted{background:var(--community-1);color:#fff;border-color:var(--community-1)}
+
+/* ARRANGEMENTS - TIMELINE */
+.arrangement-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;transition:var(--transition)}
+.arrangement-card:hover{border-color:var(--arrange-2);box-shadow:var(--shadow)}
+.arrangement-header{display:flex;gap:16px;margin-bottom:16px;align-items:center}
+.arrangement-cover{width:60px;height:60px;border-radius:var(--radius-sm);background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;overflow:hidden}
+.arrangement-cover img{width:100%;height:100%;object-fit:cover}
+.arrangement-info{flex:1}
+.arrangement-title{font-size:1.1rem;font-weight:700;margin-bottom:2px}
+.arrangement-artist{font-size:0.875rem;color:var(--text-muted)}
+.arrangement-album{font-size:0.8rem;color:var(--text-light)}
+.arrangement-author{font-size:0.75rem;color:var(--text-muted);margin-top:4px}
+.arrangement-actions{display:flex;gap:8px;align-items:center;margin-left:auto}
+.btn-small{padding:6px 12px;font-size:0.75rem}
+
+/* Timeline */
+.timeline-container{background:#1a1a2e;border-radius:var(--radius-sm);padding:16px;margin-top:12px}
+.timeline-ruler{display:flex;margin-bottom:8px;padding-left:4px}
+.timeline-ruler span{font-size:0.65rem;color:#666;min-width:30px;text-align:left}
+.timeline-track{min-height:50px;background:#16213e;border-radius:6px;position:relative;display:flex;align-items:center;padding:6px;gap:2px;overflow-x:auto}
+.timeline-block{height:38px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;color:#fff;cursor:pointer;position:relative;min-width:15px;flex-shrink:0;user-select:none;text-shadow:0 1px 2px rgba(0,0,0,0.3)}
+.timeline-block:hover{filter:brightness(1.1)}
+.timeline-block .resize-handle{position:absolute;top:0;bottom:0;width:8px;cursor:ew-resize;background:rgba(255,255,255,0.3);opacity:0;transition:opacity 0.2s;z-index:10}
+.timeline-block .resize-handle.resize-left{left:0;border-radius:4px 0 0 4px}
+.timeline-block .resize-handle.resize-right{right:0;border-radius:0 4px 4px 0}
+.timeline-block:hover .resize-handle{opacity:1}
+.timeline-block.dragging{opacity:0.7;z-index:100}
+.timeline-block.drag-over-left::before{content:'';position:absolute;left:-3px;top:0;bottom:0;width:3px;background:#fff;border-radius:2px}
+.timeline-block.drag-over-right::after{content:'';position:absolute;right:-3px;top:0;bottom:0;width:3px;background:#fff;border-radius:2px}
+.timeline-track{cursor:default}
+.timeline-track.resizing{cursor:ew-resize}
+.timeline-block .block-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 8px}
+.timeline-block .block-bars{position:absolute;bottom:2px;right:4px;font-size:0.6rem;opacity:0.8}
+.timeline-empty{color:#666;font-size:0.85rem;padding:10px}
+.timeline-controls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.block-btn{padding:6px 12px;border:none;border-radius:4px;font-size:0.75rem;font-weight:600;cursor:pointer;color:#fff;transition:var(--transition)}
+.block-btn:hover{transform:scale(1.05)}
+
+/* Block colors */
+.block-intro{background:linear-gradient(135deg,#3b82f6,#1d4ed8)}
+.block-verse{background:linear-gradient(135deg,#10b981,#059669)}
+.block-prechorus{background:linear-gradient(135deg,#8b5cf6,#6d28d9)}
+.block-chorus{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.block-bridge{background:linear-gradient(135deg,#ec4899,#be185d)}
+.block-breakdown{background:linear-gradient(135deg,#6366f1,#4338ca)}
+.block-buildup{background:linear-gradient(135deg,#fbbf24,#f59e0b)}
+.block-drop{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.block-outro{background:linear-gradient(135deg,#64748b,#475569)}
+.block-break{background:linear-gradient(135deg,#14b8a6,#0d9488)}
+.block-solo{background:linear-gradient(135deg,#a855f7,#7c3aed)}
+.block-hook{background:linear-gradient(135deg,#f97316,#ea580c)}
+.block-interlude{background:linear-gradient(135deg,#06b6d4,#0891b2)}
+.block-riser{background:linear-gradient(135deg,#eab308,#ca8a04)}
+
+/* STRATEGIES */
+.strategy-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;transition:var(--transition)}
+.strategy-card:hover{border-color:var(--strategy-2);box-shadow:var(--shadow)}
+.strategy-title{font-size:1rem;font-weight:700;margin-bottom:8px}
+.strategy-desc{font-size:0.9rem;color:var(--text-muted);line-height:1.6}
+.strategy-category{font-size:0.72rem;padding:4px 10px;background:var(--strategy-3);color:var(--strategy-1);border-radius:50px;font-weight:500;display:inline-block;margin-top:10px}
+
+/* FORMS */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-bottom:24px;box-shadow:var(--shadow)}
+.form-title{font-size:1rem;font-weight:700;margin-bottom:20px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:0.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.form-input,.form-textarea,.form-select{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:0.9rem;transition:var(--transition);background:var(--surface);color:var(--text)}
+.form-textarea{min-height:100px;resize:vertical}
+.form-input:focus,.form-textarea:focus,.form-select:focus{outline:none;border-color:var(--music-1);box-shadow:0 0 0 3px rgba(109,40,217,0.1)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.btn-primary{padding:12px 28px;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:0.95rem;font-weight:700;cursor:pointer;transition:var(--transition);background:linear-gradient(135deg,var(--music-1),var(--music-2));color:#fff}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(109,40,217,0.35)}
+.btn-secondary{padding:10px 20px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:0.875rem;font-weight:600;cursor:pointer;transition:var(--transition);background:transparent;color:var(--text)}
+.btn-secondary:hover{background:#f3f4f6}
+.btn-danger{padding:6px 14px;border:none;border-radius:var(--radius-xs);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;transition:var(--transition);background:#fef2f2;color:#dc2626}
+.btn-danger:hover{background:#fee2e2}
+.btn-community{background:linear-gradient(135deg,var(--community-1),var(--community-2))}
+.btn-arrange{background:linear-gradient(135deg,var(--arrange-1),var(--arrange-2))}
+.btn-strategy{background:linear-gradient(135deg,var(--strategy-1),var(--strategy-2))}
+
+/* ADMIN */
+#section-admin{padding:40px 24px 80px}
+.admin-login{max-width:400px;margin:80px auto 0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;box-shadow:var(--shadow-lg);text-align:center}
+.admin-login-icon{font-size:3rem;margin-bottom:16px}
+.admin-login-title{font-size:1.4rem;font-weight:700;margin-bottom:6px}
+.admin-login-sub{font-size:0.875rem;color:var(--text-muted);margin-bottom:28px}
+.form-error{color:#dc2626;font-size:0.82rem;margin-top:6px;display:none}
+.admin-dash{display:none;max-width:1000px;margin:0 auto}
+.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.admin-title{font-size:1.6rem;font-weight:800;color:var(--admin-1)}
+.admin-tabs{display:flex;gap:4px;background:#f3f4f6;padding:4px;border-radius:50px;margin-bottom:32px;flex-wrap:wrap}
+.admin-tab{padding:8px 20px;border:none;border-radius:50px;font-family:inherit;font-size:0.875rem;font-weight:500;cursor:pointer;transition:var(--transition);background:transparent;color:var(--text-muted)}
+.admin-tab.active{background:var(--surface);color:var(--admin-1);font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+.admin-panel{display:none}
+.admin-panel.active{display:block}
+.admin-list{display:flex;flex-direction:column;gap:8px}
+.admin-list-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;gap:12px}
+.admin-list-item-emoji{font-size:1.2rem}
+.admin-list-item-info{flex:1}
+.admin-list-item-name{font-weight:600;font-size:0.9rem}
+.admin-list-item-meta{font-size:0.78rem;color:var(--text-muted)}
+.empty-state{text-align:center;padding:40px;color:var(--text-muted);font-size:0.9rem}
+.success-toast{position:fixed;bottom:24px;right:24px;background:var(--admin-1);color:#fff;padding:14px 20px;border-radius:var(--radius-sm);font-size:0.875rem;font-weight:500;box-shadow:var(--shadow-lg);transform:translateY(80px);transition:var(--transition);z-index:1000}
+.success-toast.show{transform:translateY(0)}
+
+/* Block editor modal */
+.block-editor-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-lg);z-index:1001;min-width:380px;max-width:90vw;max-height:85vh;overflow-y:auto;display:none}
+.block-editor-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;display:none}
+.ops-tags-container{max-height:250px;overflow-y:auto;padding:12px;background:#f8f9fa;border-radius:var(--radius-sm);border:1px solid var(--border)}
+.ops-category{margin-bottom:12px}
+.ops-category:last-child{margin-bottom:0}
+.ops-category-header{display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border);cursor:pointer}
+.ops-category-header:hover{color:var(--music-1)}
+.ops-category-header .cat-emoji{font-size:1rem}
+.ops-category-header .cat-toggle{margin-left:auto;font-size:0.65rem;color:var(--text-light)}
+.ops-category-items{display:flex;flex-wrap:wrap;gap:5px}
+.ops-category.collapsed .ops-category-items{display:none}
+.ops-tag{padding:4px 10px;border-radius:50px;font-size:0.72rem;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);color:var(--text-muted);transition:var(--transition)}
+.ops-tag:hover{border-color:var(--music-2);color:var(--music-1)}
+.ops-tag.selected{background:var(--music-1);color:#fff;border-color:var(--music-1)}
+.ops-tags-selected{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+.ops-tags-selected:empty{display:none}
+.ops-tag-selected{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:50px;font-size:0.72rem;font-weight:600;background:var(--music-3);color:var(--music-1)}
+.ops-tag-selected .remove-tag{cursor:pointer;font-weight:bold;margin-left:2px;opacity:0.7}
+.ops-tag-selected .remove-tag:hover{opacity:1}
+.block-ops-indicator{position:absolute;top:2px;left:4px;display:flex;gap:2px;flex-wrap:wrap;max-width:calc(100% - 8px)}
+.block-op-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.7)}
+
+/* Auth & Profile */
+.auth-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:none;align-items:center;justify-content:center}
+.auth-modal.show{display:flex}
+.auth-box{background:var(--surface);border-radius:var(--radius);padding:32px;max-width:400px;width:90%;box-shadow:var(--shadow-lg)}
+.auth-title{font-size:1.5rem;font-weight:700;margin-bottom:8px;text-align:center}
+.auth-subtitle{color:var(--text-muted);font-size:0.9rem;margin-bottom:24px;text-align:center}
+.auth-tabs{display:flex;gap:4px;background:#f3f4f6;padding:4px;border-radius:50px;margin-bottom:24px}
+.auth-tab{flex:1;padding:10px;border:none;border-radius:50px;font-family:inherit;font-size:0.9rem;font-weight:500;cursor:pointer;transition:var(--transition);background:transparent;color:var(--text-muted)}
+.auth-tab.active{background:var(--surface);color:var(--text);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+.auth-form{display:none}
+.auth-form.active{display:block}
+.user-header{display:flex;align-items:center;gap:16px;padding:20px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:var(--radius);color:#fff;margin-bottom:24px}
+.user-avatar{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700}
+.user-info h2{font-size:1.3rem;font-weight:700;margin-bottom:2px}
+.user-info p{font-size:0.85rem;opacity:0.9}
+.user-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+.user-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;text-align:center}
+.user-stat-value{font-size:1.5rem;font-weight:700;color:var(--text)}
+.user-stat-label{font-size:0.8rem;color:var(--text-muted)}
+.profile-section{margin-bottom:32px}
+.profile-section-title{font-size:1.1rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.profile-items{display:flex;flex-direction:column;gap:12px}
+.profile-empty{text-align:center;padding:32px;color:var(--text-muted);background:#f9fafb;border-radius:var(--radius-sm)}
+.owner-badge{font-size:0.65rem;padding:2px 8px;background:#fef3c7;color:#d97706;border-radius:50px;font-weight:600;margin-left:8px}
+.author-link{color:var(--music-1);cursor:pointer;font-weight:500}
+.author-link:hover{text-decoration:underline}
+
+/* Responsive */
+@media(max-width:768px){
+  .header-inner{padding:0 16px;gap:12px;flex-wrap:wrap;height:auto;padding-top:12px;padding-bottom:12px}
+  .logo{font-size:1.1rem}
+  nav{gap:2px;order:3;width:100%}
+  .nav-main{flex-wrap:wrap;justify-content:center}
+  .nav-tab{padding:6px 12px;font-size:0.8rem}
+  .nav-admin-wrapper{order:2}
+  .section{padding:24px 16px 60px}
+  .generators{grid-template-columns:1fr}
+  .section-title{font-size:1.5rem}
+  .form-row{grid-template-columns:1fr}
+  .cats-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">Escape <span>the Loop</span></div>
+    <nav>
+      <div class="nav-main">
+        <button class="nav-tab" id="tab-music" onclick="showSection('music')">
+          <span class="tab-dot dot-music"></span><span class="tab-label" data-i18n="navMusic">Music</span>
+        </button>
+        <button class="nav-tab" id="tab-creative" onclick="showSection('creative')">
+          <span class="tab-dot dot-creative"></span><span class="tab-label" data-i18n="navCreative">Creative</span>
+        </button>
+        <button class="nav-tab" id="tab-arrangements" onclick="showSection('arrangements')">
+          <span class="tab-dot dot-arrangements"></span><span class="tab-label" data-i18n="navArrangements">Arrangements</span>
+        </button>
+        <button class="nav-tab" id="tab-strategies" onclick="showSection('strategies')">
+          <span class="tab-dot dot-strategies"></span><span class="tab-label" data-i18n="navStrategies">Strategies</span>
+        </button>
+        <button class="nav-tab" id="tab-profile" onclick="showSection('profile')">
+          <span class="tab-dot dot-profile"></span><span class="tab-label" data-i18n="navProfile">Profile</span>
+        </button>
+      </div>
+    </nav>
+    <div class="nav-admin-wrapper">
+      <button class="nav-tab-admin" id="tab-admin" onclick="showSection('admin')">admin</button>
+      <div class="lang-toggle">
+        <button class="lang-btn" id="lang-it" onclick="setLang('it')">IT</button>
+        <button class="lang-btn" id="lang-en" onclick="setLang('en')">EN</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- MUSIC SECTION -->
+<div class="section" id="section-music">
+  <div class="section-header">
+    <h1 class="section-title music-title" data-i18n="musicTitle">Musical Operations</h1>
+    <p class="section-subtitle" data-i18n="musicSubtitle">200+ techniques to expand your musical ideas</p>
+  </div>
+  <div class="stats-bar">
+    <div class="stat-item"><strong id="music-total">0</strong> <span data-i18n="statOps">operations</span></div>
+    <div class="stat-sep">·</div>
+    <div class="stat-item"><strong id="music-cats">0</strong> <span data-i18n="statCats">categories</span></div>
+  </div>
+  <div class="generators">
+    <div class="gen-card gen-card-music-a">
+      <div class="gen-label" data-i18n="genSingle">Single Operation</div>
+      <div class="gen-title" data-i18n="genSingleDesc">Draw a random operation</div>
+      <div class="gen-result" id="music-single-result">
+        <div class="gen-result-cat" data-i18n="pressGen">Press to generate</div>
+      </div>
+      <button class="gen-btn" onclick="generateSingle('music')" data-i18n="btnGen">Generate</button>
+    </div>
+    <div class="gen-card gen-card-music-b">
+      <div class="gen-label" data-i18n="genCombo">Combo (2-3)</div>
+      <div class="gen-title" data-i18n="genComboDesc">Sequence of operations</div>
+      <div class="gen-result" id="music-combo-result">
+        <div class="steps-list" id="music-combo-steps">
+          <div class="gen-result-cat" data-i18n="pressCombo">Press for a combo</div>
+        </div>
+      </div>
+      <button class="gen-btn" onclick="generateCombo('music')" data-i18n="btnCombo">Generate Combo</button>
+    </div>
+  </div>
+  <div class="filter-section">
+    <div class="filter-label" data-i18n="filterBy">Filter by category</div>
+    <div class="filter-pills" id="music-filter-pills"></div>
+  </div>
+  <div class="cats-grid" id="music-cats-grid"></div>
+</div>
+
+<!-- CREATIVE SECTION -->
+<div class="section" id="section-creative">
+  <div class="section-header">
+    <h1 class="section-title creative-title" data-i18n="creativeTitle">Creative Operations</h1>
+    <p class="section-subtitle" data-i18n="creativeSubtitle">Grammar of creative operations for any artistic discipline</p>
+  </div>
+  <div class="stats-bar">
+    <div class="stat-item"><strong id="creative-total">0</strong> <span data-i18n="statOps">operations</span></div>
+    <div class="stat-sep">·</div>
+    <div class="stat-item"><strong id="creative-cats">0</strong> <span data-i18n="statCats">categories</span></div>
+  </div>
+  <div class="generators">
+    <div class="gen-card gen-card-creative-a">
+      <div class="gen-label" data-i18n="genSingle">Single Operation</div>
+      <div class="gen-title" data-i18n="genSingleDesc">Draw a random operation</div>
+      <div class="gen-result" id="creative-single-result">
+        <div class="gen-result-cat" data-i18n="pressGen">Press to generate</div>
+      </div>
+      <button class="gen-btn" onclick="generateSingle('creative')" data-i18n="btnGen">Generate</button>
+    </div>
+    <div class="gen-card gen-card-creative-b">
+      <div class="gen-label" data-i18n="genCombo">Combo (2-3)</div>
+      <div class="gen-title" data-i18n="genComboDesc">Sequence of operations</div>
+      <div class="gen-result" id="creative-combo-result">
+        <div class="steps-list" id="creative-combo-steps">
+          <div class="gen-result-cat" data-i18n="pressCombo">Press for a combo</div>
+        </div>
+      </div>
+      <button class="gen-btn" onclick="generateCombo('creative')" data-i18n="btnCombo">Generate Combo</button>
+    </div>
+    <div class="gen-card gen-card-creative-c">
+      <div class="gen-label" data-i18n="genChain">Chain (4-5)</div>
+      <div class="gen-title" data-i18n="genChainDesc">Long sequence + domain</div>
+      <div class="gen-result" id="creative-chain-result">
+        <div class="steps-list" id="creative-chain-steps">
+          <div class="gen-result-cat" data-i18n="pressChain">Press for a chain</div>
+        </div>
+      </div>
+      <button class="gen-btn" onclick="generateChain()" data-i18n="btnChain">Generate Chain</button>
+    </div>
+  </div>
+  <div class="filter-section">
+    <div class="filter-label" data-i18n="filterBy">Filter by category</div>
+    <div class="filter-pills" id="creative-filter-pills"></div>
+  </div>
+  <div class="cats-grid" id="creative-cats-grid"></div>
+</div>
+
+<!-- PROFILE SECTION -->
+<div class="section" id="section-profile">
+  <div id="profile-logged-out">
+    <div class="admin-login" style="margin-top:40px">
+      <div class="admin-login-icon">👤</div>
+      <h2 class="admin-login-title" data-i18n="profileTitle">Your Profile</h2>
+      <p class="admin-login-sub" data-i18n="profileLoginPrompt">Login or register to manage your arrangements and strategies</p>
+      <button class="btn-primary" onclick="showAuthModal()" style="width:100%" data-i18n="loginRegister">Login / Register</button>
+    </div>
+  </div>
+  <div id="profile-logged-in" style="display:none">
+    <div class="user-header">
+      <div class="user-avatar" id="profile-avatar">U</div>
+      <div class="user-info">
+        <h2 id="profile-username">Username</h2>
+        <p id="profile-email">email@example.com</p>
+      </div>
+      <button class="btn-secondary" onclick="logoutUser()" style="margin-left:auto;background:rgba(255,255,255,0.2);color:#fff;border:none" data-i18n="logout">Logout</button>
+    </div>
+    <div class="user-stats">
+      <div class="user-stat">
+        <div class="user-stat-value" id="profile-arr-count">0</div>
+        <div class="user-stat-label" data-i18n="statArrangements">Arrangements</div>
+      </div>
+      <div class="user-stat">
+        <div class="user-stat-value" id="profile-strat-count">0</div>
+        <div class="user-stat-label" data-i18n="statStrategies">Strategies</div>
+      </div>
+    </div>
+    <div class="profile-section">
+      <div class="profile-section-title">🎵 <span data-i18n="myArrangements">My Arrangements</span></div>
+      <div class="profile-items" id="profile-arrangements"></div>
+    </div>
+    <div class="profile-section">
+      <div class="profile-section-title">💡 <span data-i18n="myStrategies">My Strategies</span></div>
+      <div class="profile-items" id="profile-strategies"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PUBLIC PROFILE MODAL -->
+<div class="auth-modal" id="public-profile-modal" onclick="if(event.target===this)closePublicProfile()">
+  <div class="auth-box" style="max-width:500px">
+    <div class="user-header" id="public-profile-header">
+      <div class="user-avatar" id="public-avatar">U</div>
+      <div class="user-info">
+        <h2 id="public-username">Username</h2>
+        <p id="public-joined"></p>
+      </div>
+    </div>
+    <div class="user-stats" id="public-stats"></div>
+    <div class="profile-section">
+      <div class="profile-section-title">🎵 <span data-i18n="arrangements">Arrangements</span></div>
+      <div class="profile-items" id="public-arrangements"></div>
+    </div>
+    <div class="profile-section">
+      <div class="profile-section-title">💡 <span data-i18n="strategies">Strategies</span></div>
+      <div class="profile-items" id="public-strategies"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" onclick="closePublicProfile()" data-i18n="close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ARRANGEMENTS SECTION -->
+<div class="section" id="section-arrangements">
+  <div class="section-header">
+    <h1 class="section-title arrangements-title" data-i18n="arrangementsTitle">Arrangements</h1>
+    <p class="section-subtitle" data-i18n="arrangementsSubtitle">Analyze song structures with visual timeline blocks</p>
+  </div>
+  <div class="stats-bar">
+    <div class="stat-item"><strong id="arrangements-total">0</strong> <span data-i18n="statSongs">songs analyzed</span></div>
+  </div>
+  <div class="form-card">
+    <div class="form-title" data-i18n="addSong">Add a new song</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" data-i18n="songTitle">Song Title</label>
+        <input type="text" class="form-input" id="arr-title" placeholder="e.g. Smells Like Teen Spirit">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="songArtist">Artist</label>
+        <input type="text" class="form-input" id="arr-artist" placeholder="e.g. Nirvana">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" data-i18n="songAlbum">Album</label>
+        <input type="text" class="form-input" id="arr-album" placeholder="e.g. Nevermind">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="songCover">Cover URL (optional)</label>
+        <input type="text" class="form-input" id="arr-cover" placeholder="https://...">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-primary btn-arrange" onclick="addArrangement()" data-i18n="createEntry">Create Entry</button>
+      <span style="color:var(--text-muted);margin:0 12px">&mdash; or &mdash;</span>
+      <button class="btn-secondary" onclick="document.getElementById('als-import-file').click()">
+        📂 <span data-i18n="importALS">Import from .als</span>
+      </button>
+      <input type="file" id="als-import-file" accept=".als" style="display:none" onchange="handleALSImport(event)">
+    </div>
+    <p style="font-size:0.8rem;color:var(--text-light);margin-top:8px" data-i18n="importALSDesc">Upload an Ableton .als file. Reads the STRUCTURE track.</p>
+  </div>
+  <div id="arrangements-list"></div>
+</div>
+
+<!-- STRATEGIES SECTION -->
+<div class="section" id="section-strategies">
+  <div class="section-header">
+    <h1 class="section-title strategies-title" data-i18n="strategiesTitle">Strategies</h1>
+    <p class="section-subtitle" data-i18n="strategiesSubtitle">Best practices and methodologies for arrangement and production</p>
+  </div>
+  <div class="stats-bar">
+    <div class="stat-item"><strong id="strategies-total">0</strong> <span data-i18n="statStrategies">strategies</span></div>
+  </div>
+  <div class="form-card">
+    <div class="form-title" data-i18n="addStrategy">Add a strategy</div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="strategyName">Strategy Name</label>
+      <input type="text" class="form-input" id="strategy-title" data-placeholder="strategyNamePlaceholder">
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="strategyDesc">Description</label>
+      <textarea class="form-textarea" id="strategy-desc" data-placeholder="strategyDescPlaceholder"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="strategyCategory">Category</label>
+      <select class="form-select" id="strategy-cat">
+        <option value="arrangiamento" data-i18n="catArrangement">Arrangement</option>
+        <option value="workflow" data-i18n="catWorkflow">Workflow</option>
+        <option value="mixing" data-i18n="catMixing">Mixing</option>
+        <option value="creativita" data-i18n="catCreativity">Creativity</option>
+        <option value="reference" data-i18n="catReference">Reference</option>
+        <option value="altro" data-i18n="catOther">Other</option>
+      </select>
+    </div>
+    <div class="form-actions">
+      <button class="btn-primary btn-strategy" onclick="addStrategy()" data-i18n="saveStrategy">Save Strategy</button>
+    </div>
+  </div>
+  <div id="strategies-list"></div>
+</div>
+
+<!-- ADMIN SECTION -->
+<div class="section" id="section-admin">
+  <div class="admin-login" id="admin-login-panel">
+    <div class="admin-login-icon">🔐</div>
+    <h2 class="admin-login-title" data-i18n="adminTitle">Admin Panel</h2>
+    <p class="admin-login-sub" data-i18n="adminSubtitle">Enter password to access</p>
+    <div class="form-group">
+      <label class="form-label" data-i18n="password">Password</label>
+      <input type="password" class="form-input" id="admin-pass-input" onkeydown="if(event.key==='Enter')adminLogin()">
+      <div class="form-error" id="admin-pass-error" data-i18n="wrongPassword">Wrong password</div>
+    </div>
+    <button class="btn-primary" onclick="adminLogin()" style="width:100%" data-i18n="login">Login</button>
+  </div>
+  <div class="admin-dash" id="admin-dashboard">
+    <div class="admin-header">
+      <h2 class="admin-title" data-i18n="adminTitle">Admin Panel</h2>
+      <button class="btn-secondary" onclick="adminLogout()" data-i18n="logout">Logout</button>
+    </div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="showAdminTab('categories')" id="atab-categories" data-i18n="tabCategories">Categories</button>
+      <button class="admin-tab" onclick="showAdminTab('operations')" id="atab-operations" data-i18n="tabOperations">Operations</button>
+      <button class="admin-tab" onclick="showAdminTab('data')" id="atab-data" data-i18n="tabData">Data Management</button>
+      <button class="admin-tab" onclick="showAdminTab('settings')" id="atab-settings" data-i18n="tabSettings">Settings</button>
+    </div>
+    <div class="admin-panel active" id="apanel-categories">
+      <div class="form-card">
+        <div class="form-title" data-i18n="addCategory">Add Category</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" data-i18n="nameIt">Name (Italian)</label>
+            <input type="text" class="form-input" id="new-cat-name-it">
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="nameEn">Name (English)</label>
+            <input type="text" class="form-input" id="new-cat-name-en">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Emoji</label>
+            <input type="text" class="form-input" id="new-cat-emoji" maxlength="4">
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="sectionLabel">Section</label>
+            <select class="form-select" id="new-cat-section">
+              <option value="music" data-i18n="navMusic">Music</option>
+              <option value="creative" data-i18n="navCreative">Creative</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary" onclick="adminAddCategory()" data-i18n="save">Save</button>
+        </div>
+      </div>
+      <div id="admin-cats-list"></div>
+    </div>
+    <div class="admin-panel" id="apanel-operations">
+      <div class="form-card">
+        <div class="form-title" data-i18n="addOperation">Add Operation</div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="categoryLabel">Category</label>
+          <select class="form-select" id="new-op-category"></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" data-i18n="nameIt">Name (Italian)</label>
+            <input type="text" class="form-input" id="new-op-name-it">
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="nameEn">Name (English)</label>
+            <input type="text" class="form-input" id="new-op-name-en">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" data-i18n="descIt">Description (Italian)</label>
+            <input type="text" class="form-input" id="new-op-desc-it">
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="descEn">Description (English)</label>
+            <input type="text" class="form-input" id="new-op-desc-en">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary" onclick="adminAddOperation()" data-i18n="save">Save</button>
+        </div>
+      </div>
+      <div id="admin-ops-list"></div>
+    </div>
+    <div class="admin-panel" id="apanel-data">
+      <div class="form-card">
+        <div class="form-title" data-i18n="exportImport">Export/Import Data</div>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:16px" data-i18n="exportDesc">Export all data for backup</p>
+        <div class="form-actions" style="justify-content:flex-start">
+          <button class="btn-primary" onclick="exportAllData()" data-i18n="exportJSON">Export JSON</button>
+          <button class="btn-secondary" onclick="document.getElementById('import-file').click()" data-i18n="importJSON">Import JSON</button>
+          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importAllData(event)">
+        </div>
+      </div>
+      <div class="form-card">
+        <div class="form-title" style="color:#dc2626" data-i18n="dangerZone">Danger Zone</div>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:16px" data-i18n="deleteAllDesc">Delete all user data. This cannot be undone.</p>
+        <button class="btn-danger" onclick="clearAllData()" data-i18n="deleteAll">Delete All Data</button>
+      </div>
+    </div>
+    <div class="admin-panel" id="apanel-settings">
+      <div class="form-card">
+        <div class="form-title" data-i18n="changePassword">Change Password</div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="currentPassword">Current Password</label>
+          <input type="password" class="form-input" id="current-pass">
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="newPassword">New Password</label>
+          <input type="password" class="form-input" id="new-pass">
+        </div>
+        <div class="form-error" id="pass-change-error"></div>
+        <div class="form-actions">
+          <button class="btn-primary" onclick="adminChangePassword()" data-i18n="save">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="success-toast" id="toast"></div>
+
+<!-- AUTH MODAL -->
+<div class="auth-modal" id="auth-modal" onclick="if(event.target===this)closeAuthModal()">
+  <div class="auth-box">
+    <div class="auth-title" data-i18n="welcome">Welcome</div>
+    <div class="auth-subtitle" data-i18n="authSubtitle">Login or create an account</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="showAuthTab('login')" id="auth-tab-login" data-i18n="login">Login</button>
+      <button class="auth-tab" onclick="showAuthTab('register')" id="auth-tab-register" data-i18n="register">Register</button>
+    </div>
+    <div class="auth-form active" id="auth-form-login">
+      <div class="form-group">
+        <label class="form-label" data-i18n="username">Username</label>
+        <input type="text" class="form-input" id="login-username">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="password">Password</label>
+        <input type="password" class="form-input" id="login-password" onkeydown="if(event.key==='Enter')loginUser()">
+      </div>
+      <div class="form-error" id="login-error"></div>
+      <button class="btn-primary" onclick="loginUser()" style="width:100%;margin-top:16px" data-i18n="login">Login</button>
+    </div>
+    <div class="auth-form" id="auth-form-register">
+      <div class="form-group">
+        <label class="form-label" data-i18n="username">Username</label>
+        <input type="text" class="form-input" id="register-username">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="register-email">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="password">Password</label>
+        <input type="password" class="form-input" id="register-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="confirmPassword">Confirm Password</label>
+        <input type="password" class="form-input" id="register-password2" onkeydown="if(event.key==='Enter')registerUser()">
+      </div>
+      <div class="form-error" id="register-error"></div>
+      <button class="btn-primary" onclick="registerUser()" style="width:100%;margin-top:16px" data-i18n="register">Register</button>
+    </div>
+  </div>
+</div>
+
+<!-- Block Editor Popup -->
+<div class="block-editor-overlay" id="block-overlay" onclick="closeBlockEditor()"></div>
+<div class="block-editor-popup" id="block-popup">
+  <div class="form-title" data-i18n="editBlock">Edit Block</div>
+  <div class="form-group">
+    <label class="form-label" data-i18n="bars">Bars</label>
+    <input type="number" class="form-input" id="block-bars" min="0.5" max="64" step="0.5" value="8">
+  </div>
+  <div class="form-group">
+    <label class="form-label" data-i18n="notes">Notes</label>
+    <input type="text" class="form-input" id="block-notes">
+  </div>
+  <div class="form-group">
+    <label class="form-label" data-i18n="opsLabel">Musical Operations</label>
+    <div class="ops-tags-container" id="block-ops-list"></div>
+    <div class="ops-tags-selected" id="block-ops-selected"></div>
+  </div>
+  <div class="form-actions">
+    <button class="btn-danger" onclick="deleteCurrentBlock()" data-i18n="delete">Delete</button>
+    <button class="btn-primary" onclick="saveBlockEdit()" data-i18n="save">Save</button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   i18n TRANSLATIONS
+════════════════════════════════════════ */
+const i18n = {
+  it: {
+    navMusic:"Musica", navCreative:"Creativo", navCommunity:"Community", navArrangements:"Arrangiamenti", navStrategies:"Strategie",
+    musicTitle:"Operazioni Musicali", musicSubtitle:"200+ tecniche per espandere le tue idee musicali",
+    creativeTitle:"Operazioni Creative", creativeSubtitle:"Grammatica delle operazioni creative per qualsiasi disciplina",
+    communityTitle:"Community Ideas", communitySubtitle:"Condividi le tue strategie e impara dalla community",
+    arrangementsTitle:"Arrangiamenti", arrangementsSubtitle:"Analizza la struttura dei brani con blocchi timeline visuali",
+    strategiesTitle:"Strategie", strategiesSubtitle:"Best practices e metodologie per arrangiamento e produzione",
+    statOps:"operazioni", statCats:"categorie", statIdeas:"idee", statSongs:"brani analizzati", statStrategies:"strategie",
+    genSingle:"Operazione Singola", genSingleDesc:"Estrai un'operazione casuale",
+    genCombo:"Combo (2-3)", genComboDesc:"Sequenza di operazioni",
+    genChain:"Catena (4-5)", genChainDesc:"Sequenza lunga + dominio",
+    btnGen:"Genera", btnCombo:"Genera Combo", btnChain:"Genera Catena",
+    pressGen:"Premi per generare", pressCombo:"Premi per una combo", pressChain:"Premi per una catena",
+    filterBy:"Filtra per categoria", filterAll:"Tutte",
+    shareIdea:"Condividi una nuova idea", ideaTitleLabel:"Titolo", ideaTitlePlaceholder:"Es: Come uscire dal loop dei 4 bar",
+    ideaDescLabel:"Descrizione", ideaDescPlaceholder:"Descrivi la tua strategia in dettaglio...",
+    ideaAuthorLabel:"Autore", ideaAuthorPlaceholder:"Il tuo nome",
+    ideaTagsLabel:"Tags (separati da virgola)", ideaTagsPlaceholder:"arrangiamento, workflow, creativita",
+    publishIdea:"Pubblica Idea", noIdeas:"Nessuna idea ancora. Sii il primo a condividerne una!",
+    addSong:"Aggiungi un nuovo brano", songTitle:"Titolo Brano", songArtist:"Artista", songAlbum:"Album", songCover:"URL Cover (opzionale)",
+    createEntry:"Crea Entry", noSongs:"Nessun brano analizzato. Aggiungi il primo!",
+    addStrategy:"Aggiungi una strategia", strategyName:"Nome Strategia", strategyNamePlaceholder:"Es: Arrangiamento Additivo",
+    strategyDesc:"Descrizione", strategyDescPlaceholder:"Descrivi la strategia e come applicarla...",
+    strategyCategory:"Categoria", saveStrategy:"Salva Strategia", noStrategies:"Nessuna strategia salvata. Aggiungine una!",
+    catArrangement:"Arrangiamento", catWorkflow:"Workflow", catMixing:"Mixing", catCreativity:"Creativita", catReference:"Reference", catOther:"Altro",
+    adminTitle:"Pannello Admin", adminSubtitle:"Inserisci la password per accedere",
+    password:"Password", wrongPassword:"Password errata", login:"Accedi", logout:"Esci",
+    tabCategories:"Categorie", tabOperations:"Operazioni", tabData:"Gestione Dati", tabSettings:"Impostazioni",
+    addCategory:"Aggiungi Categoria", nameIt:"Nome (italiano)", nameEn:"Nome (inglese)", sectionLabel:"Sezione",
+    addOperation:"Aggiungi Operazione", categoryLabel:"Categoria", descIt:"Descrizione (italiano)", descEn:"Descrizione (inglese)",
+    save:"Salva", delete:"Elimina", exportImport:"Esporta/Importa Dati", exportDesc:"Esporta tutti i dati per backup",
+    exportJSON:"Esporta JSON", importJSON:"Importa JSON", dangerZone:"Zona Pericolosa",
+    deleteAllDesc:"Elimina tutti i dati utente. Questa azione non puo essere annullata.", deleteAll:"Elimina Tutti i Dati",
+    changePassword:"Cambia Password", currentPassword:"Password attuale", newPassword:"Nuova password",
+    noCustomCats:"Nessuna categoria personalizzata", noCustomOps:"Nessuna operazione personalizzata",
+    editBlock:"Modifica Blocco", bars:"Battute", notes:"Note",
+    intro:"Intro", verse:"Verse", prechorus:"Pre-Chorus", chorus:"Chorus", bridge:"Bridge",
+    breakdown:"Breakdown", buildup:"Build-Up", drop:"Drop", outro:"Outro", break:"Break",
+    solo:"Solo", hook:"Hook", interlude:"Interlude", riser:"Riser",
+    applyTo:"Applica a:", saved:"Salvato!", deleted:"Eliminato!", published:"Pubblicato!",
+    fillFields:"Compila tutti i campi", confirmDelete:"Sei sicuro?", confirmDeleteAll:"Eliminare TUTTI i dati?",
+    dataExported:"Dati esportati!", dataImported:"Dati importati!", jsonError:"Errore nel file JSON",
+    passUpdated:"Password aggiornata!", passWrong:"Password attuale errata",
+    noSections:"Clicca un blocco per aggiungerlo alla timeline",
+    opsLabel:"Operazioni Musicali",
+    dragToReorder:"Trascina per riordinare",
+    navProfile:"Profilo",
+    profileTitle:"Il Tuo Profilo",
+    profileLoginPrompt:"Accedi o registrati per gestire i tuoi arrangiamenti e strategie",
+    loginRegister:"Accedi / Registrati",
+    welcome:"Benvenuto",
+    authSubtitle:"Accedi o crea un account",
+    register:"Registrati",
+    username:"Username",
+    confirmPassword:"Conferma Password",
+    myArrangements:"I Miei Arrangiamenti",
+    myStrategies:"Le Mie Strategie",
+    arrangements:"Arrangiamenti",
+    strategies:"Strategie",
+    statArrangements:"arrangiamenti",
+    close:"Chiudi",
+    userNotFound:"Utente non trovato",
+    wrongCredentials:"Credenziali errate",
+    userExists:"Username già in uso",
+    passwordMismatch:"Le password non coincidono",
+    fillAllFields:"Compila tutti i campi",
+    joinedOn:"Iscritto il",
+    by:"di",
+    publishedBy:"Pubblicato da",
+    you:"tu",
+    exportALS:"Esporta come .als",
+    importALS:"Importa da .als",
+    importALSDesc:"Carica un file .als di Ableton. Legge la traccia STRUCTURE.",
+    alsExported:"File .als esportato!",
+    alsImported:"Arrangiamento importato da .als!",
+    alsError:"Errore nel file .als",
+    noStructureTrack:"Traccia STRUCTURE non trovata nel file .als",
+    selectALSFile:"Seleziona file .als"
+  },
+  en: {
+    navMusic:"Music", navCreative:"Creative", navCommunity:"Community", navArrangements:"Arrangements", navStrategies:"Strategies",
+    musicTitle:"Musical Operations", musicSubtitle:"200+ techniques to expand your musical ideas",
+    creativeTitle:"Creative Operations", creativeSubtitle:"Grammar of creative operations for any artistic discipline",
+    communityTitle:"Community Ideas", communitySubtitle:"Share your strategies and learn from the community",
+    arrangementsTitle:"Arrangements", arrangementsSubtitle:"Analyze song structures with visual timeline blocks",
+    strategiesTitle:"Strategies", strategiesSubtitle:"Best practices and methodologies for arrangement and production",
+    statOps:"operations", statCats:"categories", statIdeas:"ideas", statSongs:"songs analyzed", statStrategies:"strategies",
+    genSingle:"Single Operation", genSingleDesc:"Draw a random operation",
+    genCombo:"Combo (2-3)", genComboDesc:"Sequence of operations",
+    genChain:"Chain (4-5)", genChainDesc:"Long sequence + domain",
+    btnGen:"Generate", btnCombo:"Generate Combo", btnChain:"Generate Chain",
+    pressGen:"Press to generate", pressCombo:"Press for a combo", pressChain:"Press for a chain",
+    filterBy:"Filter by category", filterAll:"All",
+    shareIdea:"Share a new idea", ideaTitleLabel:"Title", ideaTitlePlaceholder:"E.g. How to escape the 4 bar loop",
+    ideaDescLabel:"Description", ideaDescPlaceholder:"Describe your strategy in detail...",
+    ideaAuthorLabel:"Author", ideaAuthorPlaceholder:"Your name",
+    ideaTagsLabel:"Tags (comma separated)", ideaTagsPlaceholder:"arrangement, workflow, creativity",
+    publishIdea:"Publish Idea", noIdeas:"No ideas yet. Be the first to share one!",
+    addSong:"Add a new song", songTitle:"Song Title", songArtist:"Artist", songAlbum:"Album", songCover:"Cover URL (optional)",
+    createEntry:"Create Entry", noSongs:"No songs analyzed. Add the first one!",
+    addStrategy:"Add a strategy", strategyName:"Strategy Name", strategyNamePlaceholder:"E.g. Additive Arrangement",
+    strategyDesc:"Description", strategyDescPlaceholder:"Describe the strategy and how to apply it...",
+    strategyCategory:"Category", saveStrategy:"Save Strategy", noStrategies:"No strategies saved. Add one!",
+    catArrangement:"Arrangement", catWorkflow:"Workflow", catMixing:"Mixing", catCreativity:"Creativity", catReference:"Reference", catOther:"Other",
+    adminTitle:"Admin Panel", adminSubtitle:"Enter password to access",
+    password:"Password", wrongPassword:"Wrong password", login:"Login", logout:"Logout",
+    tabCategories:"Categories", tabOperations:"Operations", tabData:"Data Management", tabSettings:"Settings",
+    addCategory:"Add Category", nameIt:"Name (Italian)", nameEn:"Name (English)", sectionLabel:"Section",
+    addOperation:"Add Operation", categoryLabel:"Category", descIt:"Description (Italian)", descEn:"Description (English)",
+    save:"Save", delete:"Delete", exportImport:"Export/Import Data", exportDesc:"Export all data for backup",
+    exportJSON:"Export JSON", importJSON:"Import JSON", dangerZone:"Danger Zone",
+    deleteAllDesc:"Delete all user data. This cannot be undone.", deleteAll:"Delete All Data",
+    changePassword:"Change Password", currentPassword:"Current Password", newPassword:"New Password",
+    noCustomCats:"No custom categories", noCustomOps:"No custom operations",
+    editBlock:"Edit Block", bars:"Bars", notes:"Notes",
+    intro:"Intro", verse:"Verse", prechorus:"Pre-Chorus", chorus:"Chorus", bridge:"Bridge",
+    breakdown:"Breakdown", buildup:"Build-Up", drop:"Drop", outro:"Outro", break:"Break",
+    solo:"Solo", hook:"Hook", interlude:"Interlude", riser:"Riser",
+    applyTo:"Apply to:", saved:"Saved!", deleted:"Deleted!", published:"Published!",
+    fillFields:"Fill all fields", confirmDelete:"Are you sure?", confirmDeleteAll:"Delete ALL data?",
+    dataExported:"Data exported!", dataImported:"Data imported!", jsonError:"JSON file error",
+    passUpdated:"Password updated!", passWrong:"Current password is wrong",
+    noSections:"Click a block to add it to the timeline",
+    opsLabel:"Musical Operations",
+    dragToReorder:"Drag to reorder",
+    navProfile:"Profile",
+    profileTitle:"Your Profile",
+    profileLoginPrompt:"Login or register to manage your arrangements and strategies",
+    loginRegister:"Login / Register",
+    welcome:"Welcome",
+    authSubtitle:"Login or create an account",
+    register:"Register",
+    username:"Username",
+    confirmPassword:"Confirm Password",
+    myArrangements:"My Arrangements",
+    myStrategies:"My Strategies",
+    arrangements:"Arrangements",
+    strategies:"Strategies",
+    statArrangements:"arrangements",
+    close:"Close",
+    userNotFound:"User not found",
+    wrongCredentials:"Wrong credentials",
+    userExists:"Username already taken",
+    passwordMismatch:"Passwords do not match",
+    fillAllFields:"Fill all fields",
+    joinedOn:"Joined on",
+    by:"by",
+    publishedBy:"Published by",
+    you:"you",
+    exportALS:"Export as .als",
+    importALS:"Import from .als",
+    importALSDesc:"Upload an Ableton .als file. Reads the STRUCTURE track.",
+    alsExported:".als file exported!",
+    alsImported:"Arrangement imported from .als!",
+    alsError:"Error in .als file",
+    noStructureTrack:"STRUCTURE track not found in .als file",
+    selectALSFile:"Select .als file"
+  }
+};
+
+/* ════════════════════════════════════════
+   SECTION TYPES WITH COLORS
+════════════════════════════════════════ */
+const sectionTypes = [
+  {key:'intro', color:'#3b82f6'},
+  {key:'verse', color:'#10b981'},
+  {key:'prechorus', color:'#8b5cf6'},
+  {key:'chorus', color:'#f59e0b'},
+  {key:'bridge', color:'#ec4899'},
+  {key:'breakdown', color:'#6366f1'},
+  {key:'buildup', color:'#fbbf24'},
+  {key:'drop', color:'#ef4444'},
+  {key:'outro', color:'#64748b'},
+  {key:'break', color:'#14b8a6'},
+  {key:'solo', color:'#a855f7'},
+  {key:'hook', color:'#f97316'},
+  {key:'interlude', color:'#06b6d4'},
+  {key:'riser', color:'#eab308'},
+];
+
+/* ════════════════════════════════════════
+   DATA - MUSIC
+════════════════════════════════════════ */
+const musicData = [
+  {key:"melodiche", emoji:"🎵", it:"Operazioni Melodiche", en:"Melodic Operations", items:[
+    {it:{name:"Trasposizione",desc:"Spostare melodia su/giù di intervallo costante"},en:{name:"Transposition",desc:"Move melody up/down by constant interval"}},
+    {it:{name:"Inversione",desc:"Ribaltare direzione degli intervalli (su→giù)"},en:{name:"Inversion",desc:"Flip interval direction (up→down)"}},
+    {it:{name:"Retrogrado",desc:"Suonare la melodia al contrario"},en:{name:"Retrograde",desc:"Play melody backwards"}},
+    {it:{name:"Retrogrado-Inversione",desc:"Combinare inversione + retrogrado"},en:{name:"Retrograde-Inversion",desc:"Combine inversion + retrograde"}},
+    {it:{name:"Espansione intervallare",desc:"Ampliare gli intervalli"},en:{name:"Interval Expansion",desc:"Widen intervals"}},
+    {it:{name:"Compressione intervallare",desc:"Ridurre gli intervalli"},en:{name:"Interval Compression",desc:"Reduce intervals"}},
+    {it:{name:"Cromatizzazione",desc:"Riempire con passaggi cromatici"},en:{name:"Chromaticization",desc:"Fill with chromatic passages"}},
+    {it:{name:"Aumentazione",desc:"Raddoppiare valori ritmici"},en:{name:"Augmentation",desc:"Double rhythmic values"}},
+    {it:{name:"Diminuzione",desc:"Dimezzare valori ritmici"},en:{name:"Diminution",desc:"Halve rhythmic values"}},
+    {it:{name:"Sincope",desc:"Spostare accenti su tempi deboli"},en:{name:"Syncopation",desc:"Shift accents to weak beats"}},
+    {it:{name:"Appiattimento",desc:"Ridurre l'ambitus (range)"},en:{name:"Flattening",desc:"Reduce ambitus (range)"}},
+    {it:{name:"Estensione",desc:"Allargare l'ambitus"},en:{name:"Extension",desc:"Widen ambitus"}},
+    {it:{name:"Arrotondamento",desc:"Smussare salti bruschi"},en:{name:"Smoothing",desc:"Smooth out abrupt leaps"}},
+    {it:{name:"Angolazione",desc:"Accentuare salti e discontinuità"},en:{name:"Angulation",desc:"Emphasize leaps and discontinuity"}},
+    {it:{name:"Arpeggiazione",desc:"Costruire da accordi arpeggiati"},en:{name:"Arpeggiation",desc:"Build from arpeggiated chords"}},
+    {it:{name:"Sequenza ascendente",desc:"Ripetere pattern salendo"},en:{name:"Ascending Sequence",desc:"Repeat pattern ascending"}},
+    {it:{name:"Sequenza discendente",desc:"Ripetere pattern scendendo"},en:{name:"Descending Sequence",desc:"Repeat pattern descending"}},
+    {it:{name:"Ostinato",desc:"Pattern melodico ripetuto ossessivamente"},en:{name:"Ostinato",desc:"Obsessively repeated melodic pattern"}},
+  ]},
+  {key:"armoniche", emoji:"🎹", it:"Operazioni Armoniche", en:"Harmonic Operations", items:[
+    {it:{name:"Rimodalizzazione",desc:"Cambiare modo (maggiore↔minore)"},en:{name:"Remodalization",desc:"Change mode (major↔minor)"}},
+    {it:{name:"Reharmonization",desc:"Nuovi accordi su melodia esistente"},en:{name:"Reharmonization",desc:"New chords over existing melody"}},
+    {it:{name:"Colorazione modale",desc:"Aggiungere alterazioni modali"},en:{name:"Modal Coloring",desc:"Add modal alterations"}},
+    {it:{name:"Pivot modulation",desc:"Modulare via accordo comune"},en:{name:"Pivot Modulation",desc:"Modulate via common chord"}},
+    {it:{name:"Estensione verticale",desc:"Aggiungere 9°, 11°, 13°"},en:{name:"Vertical Extension",desc:"Add 9th, 11th, 13th"}},
+    {it:{name:"Compressione verticale",desc:"Ridurre a triadi"},en:{name:"Vertical Compression",desc:"Reduce to triads"}},
+    {it:{name:"Alterazione cromatica",desc:"#5, b9, #11, b13"},en:{name:"Chromatic Alteration",desc:"#5, b9, #11, b13"}},
+    {it:{name:"Sostituzione tritonica",desc:"Sostituire con accordo a tritono"},en:{name:"Tritone Substitution",desc:"Replace with tritone chord"}},
+    {it:{name:"Planing parallelo",desc:"Accordi paralleli identici"},en:{name:"Parallel Planing",desc:"Identical parallel chords"}},
+    {it:{name:"Planing diatonico",desc:"Paralleli seguendo scala"},en:{name:"Diatonic Planing",desc:"Parallel following scale"}},
+    {it:{name:"Moto contrario",desc:"Voci in direzioni opposte"},en:{name:"Contrary Motion",desc:"Voices in opposite directions"}},
+    {it:{name:"Cromatismo discendente",desc:"Bassline cromatica giù"},en:{name:"Descending Chromaticism",desc:"Chromatic bassline down"}},
+    {it:{name:"Circolo delle quinte",desc:"Progressione per quinte"},en:{name:"Circle of Fifths",desc:"Progression by fifths"}},
+    {it:{name:"Cluster",desc:"Accordi per secondi"},en:{name:"Cluster",desc:"Chords by seconds"}},
+    {it:{name:"Voicing aperto",desc:"Ampliare distanze tra voci"},en:{name:"Open Voicing",desc:"Widen distances between voices"}},
+    {it:{name:"Voicing chiuso",desc:"Comprimere voci vicine"},en:{name:"Close Voicing",desc:"Compress voices close together"}},
+    {it:{name:"Quartal harmony",desc:"Accordi per quarte"},en:{name:"Quartal Harmony",desc:"Chords by fourths"}},
+    {it:{name:"Drop voicing",desc:"Abbassare voci interne"},en:{name:"Drop Voicing",desc:"Lower inner voices"}},
+  ]},
+  {key:"ritmiche", emoji:"🥁", it:"Operazioni Ritmiche", en:"Rhythmic Operations", items:[
+    {it:{name:"Cambio metrico",desc:"4/4 → 3/4 → 5/4 → 7/8"},en:{name:"Meter Change",desc:"4/4 → 3/4 → 5/4 → 7/8"}},
+    {it:{name:"Polimetro",desc:"Metri diversi simultanei"},en:{name:"Polymeter",desc:"Different simultaneous meters"}},
+    {it:{name:"Emiola",desc:"3 contro 2 (o viceversa)"},en:{name:"Hemiola",desc:"3 against 2 (or vice versa)"}},
+    {it:{name:"Spostamento metrico",desc:"Battere → levare"},en:{name:"Metric Shift",desc:"Downbeat → upbeat"}},
+    {it:{name:"Accelerando",desc:"Accelerazione graduale"},en:{name:"Accelerando",desc:"Gradual acceleration"}},
+    {it:{name:"Ritardando",desc:"Rallentamento graduale"},en:{name:"Ritardando",desc:"Gradual slowing"}},
+    {it:{name:"Rubato",desc:"Tempo flessibile espressivo"},en:{name:"Rubato",desc:"Expressive flexible tempo"}},
+    {it:{name:"Densificazione",desc:"Aumentare eventi per unità tempo"},en:{name:"Densification",desc:"Increase events per time unit"}},
+    {it:{name:"Swing",desc:"Terzine vs ottavi dritti"},en:{name:"Swing",desc:"Triplets vs straight eighths"}},
+    {it:{name:"Half-time",desc:"Dimezzare feeling tempo"},en:{name:"Half-time",desc:"Halve time feeling"}},
+    {it:{name:"Double-time",desc:"Raddoppiare feeling tempo"},en:{name:"Double-time",desc:"Double time feeling"}},
+    {it:{name:"Poliritmo",desc:"3 su 4, 5 su 4, etc."},en:{name:"Polyrhythm",desc:"3 over 4, 5 over 4, etc."}},
+    {it:{name:"Backbeat",desc:"Accento su 2 e 4"},en:{name:"Backbeat",desc:"Accent on 2 and 4"}},
+    {it:{name:"Afterbeat",desc:"Accento su ottavi levare"},en:{name:"Afterbeat",desc:"Accent on upbeat eighths"}},
+    {it:{name:"Displacement",desc:"Spostare pattern di 1 ottavo"},en:{name:"Displacement",desc:"Shift pattern by 1 eighth"}},
+    {it:{name:"Ghost notes",desc:"Note morbide, quasi inudibili"},en:{name:"Ghost Notes",desc:"Soft, almost inaudible notes"}},
+    {it:{name:"Staccato",desc:"Note corte, separate"},en:{name:"Staccato",desc:"Short, separated notes"}},
+    {it:{name:"Legato",desc:"Note legate, sovrapposte"},en:{name:"Legato",desc:"Tied, overlapping notes"}},
+  ]},
+  {key:"timbriche", emoji:"🎨", it:"Operazioni Timbriche", en:"Timbral Operations", items:[
+    {it:{name:"Orchestrazione",desc:"Assegnare parti a strumenti"},en:{name:"Orchestration",desc:"Assign parts to instruments"}},
+    {it:{name:"Doubling",desc:"Raddoppiare con altro strumento"},en:{name:"Doubling",desc:"Double with another instrument"}},
+    {it:{name:"Timbral fusion",desc:"Fondere timbri indistinguibili"},en:{name:"Timbral Fusion",desc:"Fuse timbres indistinguishably"}},
+    {it:{name:"Colorazione",desc:"Cambiare strumento mid-phrase"},en:{name:"Coloring",desc:"Change instrument mid-phrase"}},
+    {it:{name:"Morphing",desc:"Trasformare timbro gradualmente"},en:{name:"Morphing",desc:"Gradually transform timbre"}},
+    {it:{name:"Transposition ottava",desc:"Spostare ottave"},en:{name:"Octave Transposition",desc:"Shift octaves"}},
+    {it:{name:"Registral expansion",desc:"Allargare range"},en:{name:"Registral Expansion",desc:"Widen range"}},
+    {it:{name:"Registral exchange",desc:"Scambiare alto↔basso"},en:{name:"Registral Exchange",desc:"Swap high↔low"}},
+    {it:{name:"Granulazione",desc:"Frammentare in micro-eventi"},en:{name:"Granulation",desc:"Fragment into micro-events"}},
+    {it:{name:"Addensamento spettrale",desc:"Riempire spettro frequenze"},en:{name:"Spectral Thickening",desc:"Fill frequency spectrum"}},
+    {it:{name:"Filtrazione",desc:"Tagliare frequenze (LP/HP/BP)"},en:{name:"Filtering",desc:"Cut frequencies (LP/HP/BP)"}},
+    {it:{name:"Distorsione",desc:"Aggiungere armoniche superiori"},en:{name:"Distortion",desc:"Add upper harmonics"}},
+    {it:{name:"Saturazione",desc:"Compressione armonica"},en:{name:"Saturation",desc:"Harmonic compression"}},
+    {it:{name:"Panning stereo",desc:"Posizionare L-R"},en:{name:"Stereo Panning",desc:"Position L-R"}},
+    {it:{name:"Spazializzazione profondità",desc:"Near-far (reverb)"},en:{name:"Depth Spatialization",desc:"Near-far (reverb)"}},
+    {it:{name:"Diffusione",desc:"Distribuire nello spazio"},en:{name:"Diffusion",desc:"Distribute in space"}},
+  ]},
+  {key:"dinamiche", emoji:"📊", it:"Operazioni Dinamiche", en:"Dynamic Operations", items:[
+    {it:{name:"Crescendo",desc:"Aumento graduale volume"},en:{name:"Crescendo",desc:"Gradual volume increase"}},
+    {it:{name:"Diminuendo",desc:"Diminuzione graduale volume"},en:{name:"Diminuendo",desc:"Gradual volume decrease"}},
+    {it:{name:"Subito forte/piano",desc:"Cambio dinamico improvviso"},en:{name:"Subito Forte/Piano",desc:"Sudden dynamic change"}},
+    {it:{name:"Swell",desc:"Crescendo-diminuendo (< >)"},en:{name:"Swell",desc:"Crescendo-diminuendo (< >)"}},
+    {it:{name:"Compressione dinamica",desc:"Ridurre gamma dinamica"},en:{name:"Dynamic Compression",desc:"Reduce dynamic range"}},
+    {it:{name:"Espansione dinamica",desc:"Aumentare contrasti"},en:{name:"Dynamic Expansion",desc:"Increase contrasts"}},
+    {it:{name:"Build-up",desc:"Aggiunta progressiva elementi"},en:{name:"Build-up",desc:"Progressive element addition"}},
+    {it:{name:"Breakdown",desc:"Sottrazione progressiva elementi"},en:{name:"Breakdown",desc:"Progressive element removal"}},
+    {it:{name:"Drop",desc:"Entrata improvvisa piena energia"},en:{name:"Drop",desc:"Sudden full-energy entry"}},
+    {it:{name:"Lift",desc:"Alleggerimento improvviso"},en:{name:"Lift",desc:"Sudden lightening"}},
+  ]},
+  {key:"formali", emoji:"🏗️", it:"Operazioni Formali", en:"Formal Operations", items:[
+    {it:{name:"Sezione A",desc:"Tema principale"},en:{name:"Section A",desc:"Main theme"}},
+    {it:{name:"Sezione B",desc:"Contrasto tematico"},en:{name:"Section B",desc:"Thematic contrast"}},
+    {it:{name:"Bridge",desc:"Collegamento/contrasto"},en:{name:"Bridge",desc:"Connection/contrast"}},
+    {it:{name:"Pre-chorus",desc:"Preparazione ritornello"},en:{name:"Pre-chorus",desc:"Chorus preparation"}},
+    {it:{name:"Intro",desc:"Apertura/presentazione"},en:{name:"Intro",desc:"Opening/presentation"}},
+    {it:{name:"Outro/Coda",desc:"Chiusura/epilogo"},en:{name:"Outro/Coda",desc:"Closing/epilogue"}},
+    {it:{name:"Variazione",desc:"Sezione modificata"},en:{name:"Variation",desc:"Modified section"}},
+    {it:{name:"Estensione",desc:"Prolungare sezione"},en:{name:"Extension",desc:"Extend section"}},
+    {it:{name:"Troncatura",desc:"Accorciare sezione"},en:{name:"Truncation",desc:"Shorten section"}},
+    {it:{name:"Interpolazione",desc:"Inserire sezione nuova"},en:{name:"Interpolation",desc:"Insert new section"}},
+    {it:{name:"Ponte sequenziale",desc:"Sequenza modulante"},en:{name:"Sequential Bridge",desc:"Modulating sequence"}},
+    {it:{name:"Ponte cromatico",desc:"Cromatismo di collegamento"},en:{name:"Chromatic Bridge",desc:"Connecting chromaticism"}},
+    {it:{name:"Riser",desc:"Sweep/noise ascendente"},en:{name:"Riser",desc:"Ascending sweep/noise"}},
+    {it:{name:"Taglio netto",desc:"Interruzione brusca"},en:{name:"Hard Cut",desc:"Abrupt interruption"}},
+  ]},
+  {key:"contrappunto", emoji:"🎼", it:"Operazioni Contrappuntistiche", en:"Contrapuntal Operations", items:[
+    {it:{name:"Moto retto",desc:"Voci stessa direzione"},en:{name:"Direct Motion",desc:"Voices same direction"}},
+    {it:{name:"Moto contrario",desc:"Voci direzioni opposte"},en:{name:"Contrary Motion",desc:"Voices opposite directions"}},
+    {it:{name:"Moto obliquo",desc:"Una ferma, altre muovono"},en:{name:"Oblique Motion",desc:"One stationary, others move"}},
+    {it:{name:"Imitazione",desc:"Una voce ripete altra"},en:{name:"Imitation",desc:"One voice repeats another"}},
+    {it:{name:"Canon",desc:"Imitazione rigorosa"},en:{name:"Canon",desc:"Strict imitation"}},
+    {it:{name:"Stretto",desc:"Canoni sovrapposti stretti"},en:{name:"Stretto",desc:"Tight overlapping canons"}},
+    {it:{name:"Hocket",desc:"Note alternate tra voci"},en:{name:"Hocket",desc:"Alternating notes between voices"}},
+    {it:{name:"Fugato",desc:"Texture fugata"},en:{name:"Fugato",desc:"Fugal texture"}},
+    {it:{name:"Countersubject",desc:"Controsoggetto ricorrente"},en:{name:"Countersubject",desc:"Recurring countersubject"}},
+    {it:{name:"Pedal contrappuntistico",desc:"Pedale + voci mobili"},en:{name:"Contrapuntal Pedal",desc:"Pedal + moving voices"}},
+  ]},
+  {key:"texture", emoji:"🧵", it:"Operazioni di Texture", en:"Texture Operations", items:[
+    {it:{name:"Monodia",desc:"Singola linea melodica"},en:{name:"Monophony",desc:"Single melodic line"}},
+    {it:{name:"Eterofonia",desc:"Variazioni simultanee stessa melodia"},en:{name:"Heterophony",desc:"Simultaneous variations of same melody"}},
+    {it:{name:"Omofonia",desc:"Melodia + accompagnamento"},en:{name:"Homophony",desc:"Melody + accompaniment"}},
+    {it:{name:"Polifonia",desc:"Voci melodiche indipendenti"},en:{name:"Polyphony",desc:"Independent melodic voices"}},
+    {it:{name:"Thickening",desc:"Ispessire texture"},en:{name:"Thickening",desc:"Thicken texture"}},
+    {it:{name:"Thinning",desc:"Assottigliare texture"},en:{name:"Thinning",desc:"Thin texture"}},
+    {it:{name:"Stratification",desc:"Creare layer separati"},en:{name:"Stratification",desc:"Create separate layers"}},
+    {it:{name:"Call-and-response",desc:"Domanda-risposta"},en:{name:"Call-and-Response",desc:"Question-answer"}},
+    {it:{name:"Pointillistic",desc:"Eventi isolati, frammentari"},en:{name:"Pointillistic",desc:"Isolated, fragmentary events"}},
+  ]},
+  {key:"motivico", emoji:"🧬", it:"Sviluppo Motivico", en:"Motivic Development", items:[
+    {it:{name:"Liquidazione",desc:"Ridurre motivo a frammento minimo"},en:{name:"Liquidation",desc:"Reduce motif to minimum fragment"}},
+    {it:{name:"Espansione motivica",desc:"Ampliare motivo"},en:{name:"Motivic Expansion",desc:"Expand motif"}},
+    {it:{name:"Germinazione",desc:"Far crescere da piccolo seme"},en:{name:"Germination",desc:"Grow from small seed"}},
+    {it:{name:"Proliferazione",desc:"Moltiplicare varianti"},en:{name:"Proliferation",desc:"Multiply variants"}},
+    {it:{name:"Condensazione",desc:"Comprimere materiale"},en:{name:"Condensation",desc:"Compress material"}},
+    {it:{name:"Metamorfosi",desc:"Trasformazione graduale natura"},en:{name:"Metamorphosis",desc:"Gradual nature transformation"}},
+    {it:{name:"Ibridazione",desc:"Fondere due motivi"},en:{name:"Hybridization",desc:"Fuse two motifs"}},
+    {it:{name:"Ornamentazione",desc:"Aggiungere decorazioni"},en:{name:"Ornamentation",desc:"Add decorations"}},
+    {it:{name:"Semplificazione",desc:"Ridurre a schema base"},en:{name:"Simplification",desc:"Reduce to basic scheme"}},
+    {it:{name:"Mutazione genetica",desc:"Variare sistematicamente"},en:{name:"Genetic Mutation",desc:"Systematically vary"}},
+  ]},
+  {key:"mood", emoji:"🎭", it:"Operazioni di Mood", en:"Mood Operations", items:[
+    {it:{name:"Maggiorazione",desc:"Rendere più luminoso/gioioso"},en:{name:"Majorization",desc:"Make brighter/happier"}},
+    {it:{name:"Minorazione",desc:"Rendere più scuro/malinconico"},en:{name:"Minorization",desc:"Make darker/melancholic"}},
+    {it:{name:"Dramatizzazione",desc:"Aumentare tensione drammatica"},en:{name:"Dramatization",desc:"Increase dramatic tension"}},
+    {it:{name:"Intimizzazione",desc:"Rendere più intimo/cameristico"},en:{name:"Intimization",desc:"Make more intimate/chamber-like"}},
+    {it:{name:"Epicizzazione",desc:"Ampliare scala emotiva/orchestrale"},en:{name:"Epicization",desc:"Expand emotional/orchestral scale"}},
+    {it:{name:"Eterealizzazione",desc:"Rendere più etereo/ambientale"},en:{name:"Etherealization",desc:"Make more ethereal/ambient"}},
+    {it:{name:"Jazzificazione",desc:"Aggiungere elementi jazz"},en:{name:"Jazzification",desc:"Add jazz elements"}},
+    {it:{name:"Modernizzazione",desc:"Evocare stile contemporaneo"},en:{name:"Modernization",desc:"Evoke contemporary style"}},
+    {it:{name:"Arcaicizzazione",desc:"Evocare stile antico"},en:{name:"Archaicization",desc:"Evoke ancient style"}},
+  ]},
+  {key:"produzione", emoji:"🎚️", it:"Operazioni Produttive", en:"Production Operations", items:[
+    {it:{name:"Compressione",desc:"Controllo dinamica"},en:{name:"Compression",desc:"Dynamics control"}},
+    {it:{name:"EQ",desc:"Equalizzazione frequenze"},en:{name:"EQ",desc:"Frequency equalization"}},
+    {it:{name:"Reverb",desc:"Spazio artificiale"},en:{name:"Reverb",desc:"Artificial space"}},
+    {it:{name:"Delay",desc:"Eco temporizzato"},en:{name:"Delay",desc:"Timed echo"}},
+    {it:{name:"Sidechain",desc:"Compressione reciproca"},en:{name:"Sidechain",desc:"Reciprocal compression"}},
+    {it:{name:"Layering",desc:"Sovrapporre suoni simili"},en:{name:"Layering",desc:"Overlay similar sounds"}},
+    {it:{name:"Frequency carving",desc:"Ritagliare frequenze"},en:{name:"Frequency Carving",desc:"Carve frequencies"}},
+    {it:{name:"Automation",desc:"Curve di controllo"},en:{name:"Automation",desc:"Control curves"}},
+  ]},
+  {key:"concettuale", emoji:"💭", it:"Operazioni Concettuali", en:"Conceptual Operations", items:[
+    {it:{name:"Minimalismo",desc:"Riduzione all'essenziale"},en:{name:"Minimalism",desc:"Reduction to essentials"}},
+    {it:{name:"Massimalismo",desc:"Saturazione di informazioni"},en:{name:"Maximalism",desc:"Information saturation"}},
+    {it:{name:"Ciclicità",desc:"Strutture circolari"},en:{name:"Cyclicity",desc:"Circular structures"}},
+    {it:{name:"Linearità",desc:"Sviluppo direzionale"},en:{name:"Linearity",desc:"Directional development"}},
+    {it:{name:"Limitazione volontaria",desc:"Vincoli auto-imposti"},en:{name:"Voluntary Limitation",desc:"Self-imposed constraints"}},
+    {it:{name:"Aleatorietà controllata",desc:"Casualità limitata"},en:{name:"Controlled Aleatoricism",desc:"Limited randomness"}},
+    {it:{name:"Appropriazione",desc:"Citare/campionare"},en:{name:"Appropriation",desc:"Quote/sample"}},
+    {it:{name:"Decostruzione",desc:"Smontare per rianalizzare"},en:{name:"Deconstruction",desc:"Disassemble to reanalyze"}},
+  ]},
+];
+
+const creativeData = [
+  {key:"quantitative", emoji:"📏", it:"Operazioni Quantitative", en:"Quantitative Operations", items:[
+    {it:{name:"Magnificare",desc:"Ingrandire, amplificare dimensioni o importanza"},en:{name:"Magnify",desc:"Enlarge, amplify dimensions or importance"}},
+    {it:{name:"Ridurre",desc:"Diminuire dimensioni, portata o complessità"},en:{name:"Reduce",desc:"Decrease dimensions, scope or complexity"}},
+    {it:{name:"Moltiplicare",desc:"Creare copie multiple di un elemento"},en:{name:"Multiply",desc:"Create multiple copies of an element"}},
+    {it:{name:"Accumulare",desc:"Aggiungere progressivamente strati o elementi"},en:{name:"Accumulate",desc:"Progressively add layers or elements"}},
+    {it:{name:"Rarefarre",desc:"Ridurre la densità, diradare"},en:{name:"Rarefy",desc:"Reduce density, thin out"}},
+    {it:{name:"Saturare",desc:"Riempire fino al massimo, oltre la capacità"},en:{name:"Saturate",desc:"Fill to maximum, beyond capacity"}},
+    {it:{name:"Minimizzare",desc:"Ridurre all'essenziale minimo"},en:{name:"Minimize",desc:"Reduce to bare minimum"}},
+    {it:{name:"Densificare",desc:"Aumentare la concentrazione di elementi"},en:{name:"Densify",desc:"Increase concentration of elements"}},
+  ]},
+  {key:"temporal", emoji:"⏱️", it:"Operazioni Temporali", en:"Temporal Operations", items:[
+    {it:{name:"Estendere",desc:"Prolungare la durata o la portata"},en:{name:"Extend",desc:"Prolong duration or scope"}},
+    {it:{name:"Stretchare",desc:"Dilatare elasticamente nel tempo"},en:{name:"Stretch",desc:"Elastically dilate in time"}},
+    {it:{name:"Rallentare",desc:"Ridurre la velocità di svolgimento"},en:{name:"Slow Down",desc:"Reduce pace of development"}},
+    {it:{name:"Velocizzare",desc:"Aumentare la velocità di svolgimento"},en:{name:"Speed Up",desc:"Increase pace of development"}},
+    {it:{name:"Troncare",desc:"Tagliare bruscamente, interrompere"},en:{name:"Truncate",desc:"Cut abruptly, interrupt"}},
+    {it:{name:"Comprimere",desc:"Condensare nel tempo"},en:{name:"Compress",desc:"Condense in time"}},
+    {it:{name:"Anticipare",desc:"Spostare prima nel tempo"},en:{name:"Anticipate",desc:"Move earlier in time"}},
+    {it:{name:"Ritardare",desc:"Spostare dopo nel tempo, differire"},en:{name:"Delay",desc:"Move later in time, defer"}},
+    {it:{name:"Sincronizzare",desc:"Allineare temporalmente"},en:{name:"Synchronize",desc:"Align temporally"}},
+    {it:{name:"Desincronizzare",desc:"Creare sfasamenti temporali"},en:{name:"Desynchronize",desc:"Create temporal offsets"}},
+    {it:{name:"Ciclicizzare",desc:"Creare strutture circolari che ritornano"},en:{name:"Cyclicize",desc:"Create circular returning structures"}},
+  ]},
+  {key:"repetition", emoji:"🔁", it:"Operazioni di Ripetizione", en:"Repetition Operations", items:[
+    {it:{name:"Ripetere",desc:"Reiterare identico un elemento"},en:{name:"Repeat",desc:"Reiterate an element identically"}},
+    {it:{name:"Iterare",desc:"Applicare più volte con risultati cumulativi"},en:{name:"Iterate",desc:"Apply multiple times with cumulative results"}},
+    {it:{name:"Insistere",desc:"Ripetere con enfasi ossessiva"},en:{name:"Insist",desc:"Repeat with obsessive emphasis"}},
+    {it:{name:"Loopare",desc:"Creare cicli continui"},en:{name:"Loop",desc:"Create continuous cycles"}},
+    {it:{name:"Sequenziare",desc:"Ordinare in successione logica"},en:{name:"Sequence",desc:"Order in logical succession"}},
+    {it:{name:"Oscillare",desc:"Alternare sistematicamente tra stati"},en:{name:"Oscillate",desc:"Systematically alternate between states"}},
+  ]},
+  {key:"spatial", emoji:"📐", it:"Operazioni Spaziali/Strutturali", en:"Spatial/Structural Operations", items:[
+    {it:{name:"Spostare",desc:"Cambiare posizione nello spazio"},en:{name:"Shift",desc:"Change position in space"}},
+    {it:{name:"Scambiare",desc:"Invertire posizioni tra elementi"},en:{name:"Swap",desc:"Invert positions between elements"}},
+    {it:{name:"Invertire",desc:"Ribaltare ordine o direzione"},en:{name:"Invert",desc:"Flip order or direction"}},
+    {it:{name:"Rispecchiare",desc:"Creare simmetria speculare"},en:{name:"Mirror",desc:"Create mirror symmetry"}},
+    {it:{name:"Stratificare",desc:"Sovrapporre livelli mantenendo identità"},en:{name:"Layer",desc:"Overlay levels maintaining identity"}},
+    {it:{name:"Giustapporre",desc:"Accostare senza fondere"},en:{name:"Juxtapose",desc:"Place side by side without merging"}},
+    {it:{name:"Innestare",desc:"Inserire elemento estraneo in organismo"},en:{name:"Graft",desc:"Insert foreign element into organism"}},
+    {it:{name:"Frammentare",desc:"Spezzare in parti separate"},en:{name:"Fragment",desc:"Break into separate parts"}},
+    {it:{name:"Disordinare",desc:"Rompere l'ordine prestabilito"},en:{name:"Disorder",desc:"Break the preset order"}},
+    {it:{name:"Randomizzare",desc:"Distribuire casualmente"},en:{name:"Randomize",desc:"Distribute randomly"}},
+  ]},
+  {key:"fusion", emoji:"🔗", it:"Operazioni di Fusione/Separazione", en:"Fusion/Separation Operations", items:[
+    {it:{name:"Fondere",desc:"Unire elementi in uno nuovo"},en:{name:"Fuse",desc:"Merge elements into a new one"}},
+    {it:{name:"Ibridare",desc:"Combinare mantenendo identità separate"},en:{name:"Hybridize",desc:"Combine maintaining separate identities"}},
+    {it:{name:"Interpolare",desc:"Creare transizioni graduali tra stati"},en:{name:"Interpolate",desc:"Create gradual transitions between states"}},
+    {it:{name:"Isolare",desc:"Estrarre e separare un elemento"},en:{name:"Isolate",desc:"Extract and separate an element"}},
+    {it:{name:"Decostruire",desc:"Smontare per rivelare componenti"},en:{name:"Deconstruct",desc:"Disassemble to reveal components"}},
+    {it:{name:"Ramificare",desc:"Dividere in direzioni multiple"},en:{name:"Branch",desc:"Divide into multiple directions"}},
+    {it:{name:"Reticolare",desc:"Creare reti di connessioni"},en:{name:"Network",desc:"Create networks of connections"}},
+  ]},
+  {key:"qualitative", emoji:"🎨", it:"Operazioni Qualitative", en:"Qualitative Operations", items:[
+    {it:{name:"Colorare",desc:"Dare carattere, tinta emotiva"},en:{name:"Color",desc:"Give character, emotional tint"}},
+    {it:{name:"Texturizzare",desc:"Definire qualità superficiale/materica"},en:{name:"Texturize",desc:"Define surface/material quality"}},
+    {it:{name:"Abbellire",desc:"Aggiungere ornamenti"},en:{name:"Embellish",desc:"Add ornaments"}},
+    {it:{name:"Semplificare",desc:"Ridurre alla forma essenziale"},en:{name:"Simplify",desc:"Reduce to essential form"}},
+    {it:{name:"Complicare",desc:"Aggiungere complessità strutturale"},en:{name:"Complicate",desc:"Add structural complexity"}},
+    {it:{name:"Confondere",desc:"Creare ambiguità o indistinzione"},en:{name:"Confuse",desc:"Create ambiguity or indistinction"}},
+    {it:{name:"Ammorbidire",desc:"Rendere più morbido, sfumato"},en:{name:"Soften",desc:"Make softer, blurred"}},
+    {it:{name:"Irrigidire",desc:"Rendere più rigido, definito"},en:{name:"Stiffen",desc:"Make more rigid, defined"}},
+    {it:{name:"Dissolvere",desc:"Far sfumare gradualmente"},en:{name:"Dissolve",desc:"Gradually fade"}},
+    {it:{name:"Cristallizzare",desc:"Dare forma netta e definita"},en:{name:"Crystallize",desc:"Give sharp, defined form"}},
+    {it:{name:"Enfatizzare",desc:"Mettere in evidenza"},en:{name:"Emphasize",desc:"Highlight"}},
+    {it:{name:"Oscurare",desc:"Rendere meno visibile o comprensibile"},en:{name:"Obscure",desc:"Make less visible or comprehensible"}},
+    {it:{name:"Camuffare",desc:"Nascondere vera natura"},en:{name:"Camouflage",desc:"Hide true nature"}},
+  ]},
+  {key:"cognitive", emoji:"🧠", it:"Operazioni Cognitive/Semantiche", en:"Cognitive/Semantic Operations", items:[
+    {it:{name:"Astrarre",desc:"Rimuovere specificità per generalizzare"},en:{name:"Abstract",desc:"Remove specificity to generalize"}},
+    {it:{name:"Concretizzare",desc:"Rendere tangibile e specifico"},en:{name:"Concretize",desc:"Make tangible and specific"}},
+    {it:{name:"Evocare",desc:"Richiamare indirettamente"},en:{name:"Evoke",desc:"Indirectly recall"}},
+    {it:{name:"Narrativizzare",desc:"Dare struttura di racconto"},en:{name:"Narrativize",desc:"Give narrative structure"}},
+    {it:{name:"Associare",desc:"Creare connessioni tra elementi"},en:{name:"Associate",desc:"Create connections between elements"}},
+    {it:{name:"Confrontare",desc:"Mettere in relazione comparativa"},en:{name:"Compare",desc:"Put in comparative relation"}},
+    {it:{name:"Decontestualizzare",desc:"Rimuovere dal contesto originale"},en:{name:"Decontextualize",desc:"Remove from original context"}},
+    {it:{name:"Ricontestualizzare",desc:"Inserire in nuovo contesto"},en:{name:"Recontextualize",desc:"Insert in new context"}},
+    {it:{name:"Generalizzare",desc:"Estendere a casi più ampi"},en:{name:"Generalize",desc:"Extend to broader cases"}},
+    {it:{name:"Specificare",desc:"Definire con precisione dettagli"},en:{name:"Specify",desc:"Define details precisely"}},
+    {it:{name:"Personificare",desc:"Attribuire qualità umane"},en:{name:"Personify",desc:"Attribute human qualities"}},
+    {it:{name:"Tradurre",desc:"Trasferire in altro linguaggio/sistema"},en:{name:"Translate",desc:"Transfer to another language/system"}},
+    {it:{name:"Sistematizzare",desc:"Organizzare in sistema coerente"},en:{name:"Systematize",desc:"Organize into coherent system"}},
+    {it:{name:"Negare",desc:"Esprimere l'opposto o il contrario"},en:{name:"Negate",desc:"Express the opposite"}},
+    {it:{name:"Condizionare",desc:"Creare relazioni causa-effetto"},en:{name:"Condition",desc:"Create cause-effect relations"}},
+  ]},
+  {key:"transformation", emoji:"⚗️", it:"Operazioni di Trasformazione", en:"Transformation Operations", items:[
+    {it:{name:"Sostituire",desc:"Rimpiazzare con elemento diverso"},en:{name:"Substitute",desc:"Replace with different element"}},
+    {it:{name:"Derivare",desc:"Estrarre conseguenze logiche da un elemento"},en:{name:"Derive",desc:"Extract logical consequences from an element"}},
+    {it:{name:"Mutare",desc:"Cambiare natura fondamentale"},en:{name:"Mutate",desc:"Change fundamental nature"}},
+    {it:{name:"Contrariare",desc:"Operare in opposizione"},en:{name:"Oppose",desc:"Operate in opposition"}},
+    {it:{name:"Distruggere",desc:"Demolire struttura esistente"},en:{name:"Destroy",desc:"Demolish existing structure"}},
+    {it:{name:"Riparare",desc:"Ripristinare integrità"},en:{name:"Repair",desc:"Restore integrity"}},
+    {it:{name:"Riscrivere",desc:"Rifare ex novo"},en:{name:"Rewrite",desc:"Redo from scratch"}},
+    {it:{name:"Imitare",desc:"Replicare caratteristiche altrui"},en:{name:"Imitate",desc:"Replicate others' characteristics"}},
+    {it:{name:"Parodiare",desc:"Imitare in modo critico/satirico"},en:{name:"Parody",desc:"Imitate critically/satirically"}},
+    {it:{name:"Simulare",desc:"Riprodurre apparenza o comportamento"},en:{name:"Simulate",desc:"Reproduce appearance or behavior"}},
+    {it:{name:"Alienare",desc:"Rendere estraneo, distante"},en:{name:"Alienate",desc:"Make foreign, distant"}},
+    {it:{name:"Personalizzare",desc:"Adattare a identità specifica"},en:{name:"Personalize",desc:"Adapt to specific identity"}},
+  ]},
+  {key:"management", emoji:"⚙️", it:"Operazioni di Gestione", en:"Management Operations", items:[
+    {it:{name:"Limitare",desc:"Porre confini o vincoli"},en:{name:"Limit",desc:"Set boundaries or constraints"}},
+    {it:{name:"Eterogenizzare",desc:"Aumentare varietà interna"},en:{name:"Heterogenize",desc:"Increase internal variety"}},
+    {it:{name:"Omettere",desc:"Escludere deliberatamente"},en:{name:"Omit",desc:"Deliberately exclude"}},
+    {it:{name:"Filtrare",desc:"Selezionare secondo criteri"},en:{name:"Filter",desc:"Select according to criteria"}},
+  ]},
+];
+
+const creativeDomains = {it:["musica","scrittura","design","video","pittura","fotografia"],en:["music","writing","design","video","painting","photography"]};
+
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+let lang = localStorage.getItem('etl_lang') || 'it';
+let activeSection = 'music';
+let musicFilter = 'all';
+let creativeFilter = 'all';
+let adminLoggedIn = false;
+let activeAdminTab = 'categories';
+let editingArrId = null;
+let editingBlockIdx = null;
+let selectedBlockOps = [];
+let currentUser = null; // {id, username, email, createdAt}
+
+/* ════════════════════════════════════════
+   DB HELPERS
+════════════════════════════════════════ */
+const getDB = k => { try { return JSON.parse(localStorage.getItem('etl_'+k) || '[]'); } catch { return []; } };
+const setDB = (k, d) => localStorage.setItem('etl_'+k, JSON.stringify(d));
+const getPassword = () => localStorage.getItem('etl_pass') || 'escapeloop';
+const setPassword = p => localStorage.setItem('etl_pass', p);
+const getAdminData = () => { try { return JSON.parse(localStorage.getItem('etl_admin') || '{}'); } catch { return {}; } };
+const setAdminData = d => localStorage.setItem('etl_admin', JSON.stringify(d));
+const t = k => (i18n[lang] && i18n[lang][k]) || k;
+const escapeHtml = s => s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : '';
+
+/* ════════════════════════════════════════
+   i18n APPLY
+════════════════════════════════════════ */
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-placeholder]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-placeholder'));
+  });
+  document.getElementById('lang-it').classList.toggle('active', lang === 'it');
+  document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+}
+
+/* ════════════════════════════════════════
+   SECTION SWITCHING
+════════════════════════════════════════ */
+function showSection(s) {
+  activeSection = s;
+  ['music','creative','arrangements','strategies','profile','admin'].forEach(sec => {
+    document.getElementById('section-'+sec).classList.toggle('visible', sec === s);
+  });
+  document.querySelectorAll('.nav-tab, .nav-tab-admin').forEach(tab => {
+    tab.classList.remove('active-music','active-creative','active-arrangements','active-strategies','active-profile','active-admin');
+  });
+  const tab = document.getElementById('tab-'+s);
+  if(tab) tab.classList.add('active-'+s);
+  if(s === 'arrangements') renderArrangements();
+  if(s === 'strategies') renderStrategies();
+  if(s === 'profile') renderProfile();
+  if(s === 'admin') renderAdminView();
+}
+
+/* ════════════════════════════════════════
+   DATA MERGE
+════════════════════════════════════════ */
+function getMusicAllData() {
+  const ad = getAdminData();
+  const builtin = musicData.map(cat => ({...cat, items: [...cat.items, ...((ad.extraOps && ad.extraOps[cat.key]) || [])]}));
+  return [...builtin, ...Object.values(ad.musicCategories || {})];
+}
+function getCreativeAllData() {
+  const ad = getAdminData();
+  const builtin = creativeData.map(cat => ({...cat, items: [...cat.items, ...((ad.extraOps && ad.extraOps[cat.key]) || [])]}));
+  return [...builtin, ...Object.values(ad.creativeCategories || {})];
+}
+function flatOps(dataset) {
+  return dataset.flatMap(cat => cat.items.map(op => ({...op, catKey:cat.key, catTitle:cat[lang] || cat.it})));
+}
+
+/* ════════════════════════════════════════
+   RENDER MUSIC/CREATIVE
+════════════════════════════════════════ */
+function renderSection(section) {
+  const isMusic = section === 'music';
+  const dataset = isMusic ? getMusicAllData() : getCreativeAllData();
+  const filter = isMusic ? musicFilter : creativeFilter;
+  const allOps = flatOps(dataset);
+  document.getElementById(section+'-total').textContent = allOps.length;
+  document.getElementById(section+'-cats').textContent = dataset.length;
+  const pillsCont = document.getElementById(section+'-filter-pills');
+  pillsCont.innerHTML = `<button class="filter-pill${filter==='all'?(isMusic?' active-music':' active-creative'):''}" onclick="setFilter('${section}','all')">${t('filterAll')}</button>`;
+  dataset.forEach(cat => {
+    const p = document.createElement('button');
+    p.className = 'filter-pill' + (filter === cat.key ? (isMusic?' active-music':' active-creative') : '');
+    p.textContent = (cat.emoji||'') + ' ' + (cat[lang] || cat.it);
+    p.onclick = () => setFilter(section, cat.key);
+    pillsCont.appendChild(p);
+  });
+  const grid = document.getElementById(section+'-cats-grid');
+  grid.innerHTML = '';
+  dataset.forEach(cat => {
+    if (filter !== 'all' && filter !== cat.key) return;
+    const card = document.createElement('div');
+    card.className = 'cat-card cat-card-'+section;
+    card.innerHTML = `<div class="cat-card-header"><span class="cat-emoji">${cat.emoji||'📌'}</span><span class="cat-card-title">${cat[lang]||cat.it}</span></div>`;
+    cat.items.forEach(op => {
+      const item = document.createElement('div');
+      item.className = 'op-item';
+      const n = op[lang]?.name || op.it?.name || '';
+      const d = op[lang]?.desc || op.it?.desc || '';
+      item.innerHTML = `<span class="op-name">${n}</span><span class="op-desc">${d}</span>`;
+      card.appendChild(item);
+    });
+    grid.appendChild(card);
+  });
+}
+function setFilter(section, key) {
+  if (section === 'music') musicFilter = key; else creativeFilter = key;
+  renderSection(section);
+}
+
+/* ════════════════════════════════════════
+   GENERATORS
+════════════════════════════════════════ */
+const pickRandom = arr => arr[Math.floor(Math.random() * arr.length)];
+function opHTML(op, num) {
+  const n = op[lang]?.name || op.it?.name || '';
+  const d = op[lang]?.desc || op.it?.desc || '';
+  const c = op.catTitle || '';
+  if (num === undefined) return `<div class="gen-result-cat">${c}</div><div class="gen-result-name">${n}</div><div class="gen-result-desc">${d}</div>`;
+  return `<div class="gen-step"><span class="gen-step-num">${num}.</span><div class="gen-step-content"><div class="gen-step-name">${n}</div><div class="gen-step-desc">${d}</div></div></div>`;
+}
+function generateSingle(section) {
+  const ops = flatOps(section === 'music' ? getMusicAllData() : getCreativeAllData());
+  if (!ops.length) return;
+  const el = document.getElementById(section+'-single-result');
+  el.style.opacity = '0';
+  setTimeout(() => { el.innerHTML = opHTML(pickRandom(ops)); el.style.opacity = '1'; }, 120);
+}
+function generateCombo(section) {
+  const ops = flatOps(section === 'music' ? getMusicAllData() : getCreativeAllData());
+  if (!ops.length) return;
+  const count = Math.random() > 0.5 ? 3 : 2;
+  const combo = Array.from({length:count}, () => pickRandom(ops));
+  const el = document.getElementById(section+'-combo-steps');
+  el.style.opacity = '0';
+  setTimeout(() => { el.innerHTML = combo.map((op,i) => opHTML(op, i+1)).join(''); el.style.opacity = '1'; }, 120);
+}
+function generateChain() {
+  const ops = flatOps(getCreativeAllData());
+  if (!ops.length) return;
+  const count = Math.floor(Math.random() * 2) + 4;
+  const chain = Array.from({length:count}, () => pickRandom(ops));
+  const domain = pickRandom(creativeDomains[lang]);
+  const el = document.getElementById('creative-chain-steps');
+  el.style.opacity = '0';
+  setTimeout(() => { el.innerHTML = chain.map((op,i) => opHTML(op, i+1)).join('') + `<div class="gen-hint">${t('applyTo')} <strong>${domain}</strong></div>`; el.style.opacity = '1'; }, 120);
+}
+
+/* ════════════════════════════════════════
+   COMMUNITY
+════════════════════════════════════════ */
+function addIdea() {
+  const title = document.getElementById('idea-title').value.trim();
+  const content = document.getElementById('idea-content').value.trim();
+  const author = document.getElementById('idea-author').value.trim() || 'Anonymous';
+  const tagsStr = document.getElementById('idea-tags').value.trim();
+  if(!title || !content) return showToast(t('fillFields'));
+  const ideas = getDB('ideas');
+  ideas.unshift({id:Date.now(), title, content, author, tags:tagsStr?tagsStr.split(',').map(t=>t.trim()).filter(Boolean):[], votes:0, votedBy:[]});
+  setDB('ideas', ideas);
+  document.getElementById('idea-title').value = '';
+  document.getElementById('idea-content').value = '';
+  document.getElementById('idea-author').value = '';
+  document.getElementById('idea-tags').value = '';
+  renderIdeas();
+  showToast(t('published'));
+}
+function voteIdea(id) {
+  const ideas = getDB('ideas');
+  const idea = ideas.find(i => i.id === id);
+  if(!idea) return;
+  const vid = localStorage.getItem('etl_visitor') || (localStorage.setItem('etl_visitor', Date.now().toString()), localStorage.getItem('etl_visitor'));
+  idea.votedBy = idea.votedBy || [];
+  if(idea.votedBy.includes(vid)) { idea.votedBy = idea.votedBy.filter(v => v !== vid); idea.votes = Math.max(0, idea.votes - 1); }
+  else { idea.votedBy.push(vid); idea.votes++; }
+  setDB('ideas', ideas);
+  renderIdeas();
+}
+function deleteIdea(id) {
+  if(!confirm(t('confirmDelete'))) return;
+  setDB('ideas', getDB('ideas').filter(i => i.id !== id));
+  renderIdeas();
+  showToast(t('deleted'));
+}
+function renderIdeas() {
+  const ideas = getDB('ideas');
+  const vid = localStorage.getItem('etl_visitor') || '';
+  document.getElementById('community-total').textContent = ideas.length;
+  const container = document.getElementById('ideas-list');
+  if(!ideas.length) { container.innerHTML = `<div class="empty-state">${t('noIdeas')}</div>`; return; }
+  container.innerHTML = ideas.map(idea => `
+    <div class="idea-card">
+      <div class="idea-header"><div class="idea-title">${escapeHtml(idea.title)}</div><div class="idea-author">${escapeHtml(idea.author)}</div></div>
+      <div class="idea-content">${escapeHtml(idea.content).replace(/\n/g,'<br>')}</div>
+      ${idea.tags?.length ? `<div class="idea-tags">${idea.tags.map(t=>`<span class="idea-tag">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+      <div class="idea-votes">
+        <button class="vote-btn ${idea.votedBy?.includes(vid)?'voted':''}" onclick="voteIdea(${idea.id})">👍 ${idea.votes||0}</button>
+        ${adminLoggedIn ? `<button class="btn-danger" onclick="deleteIdea(${idea.id})">${t('delete')}</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ════════════════════════════════════════
+   ARRANGEMENTS - TIMELINE BLOCKS
+════════════════════════════════════════ */
+const PIXELS_PER_BAR = 30;
+function addArrangement() {
+  if(!currentUser) { showAuthModal(); return; }
+  const title = document.getElementById('arr-title').value.trim();
+  const artist = document.getElementById('arr-artist').value.trim();
+  const album = document.getElementById('arr-album').value.trim();
+  const cover = document.getElementById('arr-cover').value.trim();
+  if(!title || !artist) return showToast(t('fillFields'));
+  const arr = getDB('arrangements');
+  arr.unshift({id:Date.now(), title, artist, album, cover, sections:[], userId: currentUser.id});
+  setDB('arrangements', arr);
+  document.getElementById('arr-title').value = '';
+  document.getElementById('arr-artist').value = '';
+  document.getElementById('arr-album').value = '';
+  document.getElementById('arr-cover').value = '';
+  renderArrangements();
+  showToast(t('saved'));
+}
+function deleteArrangement(id) {
+  if(!confirm(t('confirmDelete'))) return;
+  setDB('arrangements', getDB('arrangements').filter(a => a.id !== id));
+  renderArrangements();
+  showToast(t('deleted'));
+}
+function addBlockToArr(arrId, type) {
+  const arrs = getDB('arrangements');
+  const arr = arrs.find(a => a.id === arrId);
+  if(!arr) return;
+  arr.sections = arr.sections || [];
+  arr.sections.push({type, bars:8, notes:''});
+  setDB('arrangements', arrs);
+  renderArrangements();
+}
+function openBlockEditor(arrId, blockIdx) {
+  const arrs = getDB('arrangements');
+  const arr = arrs.find(a => a.id === arrId);
+  if(!arr || !arr.sections[blockIdx]) return;
+  editingArrId = arrId;
+  editingBlockIdx = blockIdx;
+  const block = arr.sections[blockIdx];
+  document.getElementById('block-bars').value = block.bars || 8;
+  document.getElementById('block-notes').value = block.notes || '';
+  selectedBlockOps = [...(block.ops || [])];
+  renderBlockOpsList();
+  document.getElementById('block-overlay').style.display = 'block';
+  document.getElementById('block-popup').style.display = 'block';
+}
+function closeBlockEditor() {
+  document.getElementById('block-overlay').style.display = 'none';
+  document.getElementById('block-popup').style.display = 'none';
+  editingArrId = null;
+  editingBlockIdx = null;
+  selectedBlockOps = [];
+}
+function saveBlockEdit() {
+  if(editingArrId === null || editingBlockIdx === null) return;
+  const arrs = getDB('arrangements');
+  const arr = arrs.find(a => a.id === editingArrId);
+  if(!arr || !arr.sections[editingBlockIdx]) return;
+  arr.sections[editingBlockIdx].bars = parseFloat(document.getElementById('block-bars').value) || 8;
+  arr.sections[editingBlockIdx].notes = document.getElementById('block-notes').value;
+  arr.sections[editingBlockIdx].ops = [...selectedBlockOps];
+  setDB('arrangements', arrs);
+  closeBlockEditor();
+  renderArrangements();
+  showToast(t('saved'));
+}
+function deleteCurrentBlock() {
+  if(editingArrId === null || editingBlockIdx === null) return;
+  if(!confirm(t('confirmDelete'))) return;
+  const arrs = getDB('arrangements');
+  const arr = arrs.find(a => a.id === editingArrId);
+  if(!arr) return;
+  arr.sections.splice(editingBlockIdx, 1);
+  setDB('arrangements', arrs);
+  closeBlockEditor();
+  renderArrangements();
+  showToast(t('deleted'));
+}
+function renderArrangements() {
+  const arrs = getDB('arrangements');
+  document.getElementById('arrangements-total').textContent = arrs.length;
+  const container = document.getElementById('arrangements-list');
+  if(!arrs.length) { container.innerHTML = `<div class="empty-state">${t('noSongs')}</div>`; return; }
+  container.innerHTML = arrs.map(arr => {
+    const totalBars = (arr.sections || []).reduce((sum, s) => sum + (s.bars || 0), 0);
+    const rulerMarks = [];
+    for(let i = 0; i <= Math.ceil(totalBars / 4) * 4; i += 4) rulerMarks.push(i);
+    const owner = getUserById(arr.userId);
+    const isOwner = currentUser && currentUser.id === arr.userId;
+    const canEdit = isOwner || adminLoggedIn;
+    return `
+    <div class="arrangement-card">
+      <div class="arrangement-header">
+        <div class="arrangement-cover">${arr.cover ? `<img src="${escapeHtml(arr.cover)}" alt="">` : '🎵'}</div>
+        <div class="arrangement-info">
+          <div class="arrangement-title">${escapeHtml(arr.title)}</div>
+          <div class="arrangement-artist">${escapeHtml(arr.artist)}</div>
+          ${arr.album ? `<div class="arrangement-album">${escapeHtml(arr.album)}</div>` : ''}
+          ${owner ? `<div class="arrangement-author">${t('publishedBy')} <span class="author-link" onclick="showPublicProfile('${owner.id}')">${escapeHtml(owner.username)}</span>${isOwner ? '<span class="owner-badge">'+t('you')+'</span>' : ''}</div>` : ''}
+        </div>
+        <div class="arrangement-actions">
+          <button class="btn-secondary btn-small" onclick="exportArrangementALS(${arr.id})" title="${t('exportALS')}">📥 .als</button>
+          ${canEdit ? `<button class="btn-danger" onclick="deleteArrangement(${arr.id})">${t('delete')}</button>` : ''}
+        </div>
+      </div>
+      <div class="timeline-container">
+        <div class="timeline-ruler">${rulerMarks.map(m => `<span style="min-width:${PIXELS_PER_BAR*4}px">${m}</span>`).join('')}</div>
+        <div class="timeline-track" id="track-${arr.id}">
+          ${arr.sections?.length ? arr.sections.map((sec, idx) => {
+            const st = sectionTypes.find(s => s.key === sec.type);
+            const width = (sec.bars || 8) * PIXELS_PER_BAR;
+            const opsCount = (sec.ops || []).length;
+            return `<div class="timeline-block block-${sec.type}" style="width:${width}px"
+              data-arr-id="${arr.id}" data-block-idx="${idx}"
+              ${canEdit ? 'draggable="true"' : ''}
+              ${canEdit ? 'ondragstart="blockDragStart(event)" ondragend="blockDragEnd(event)" ondragover="blockDragOver(event)" ondragleave="blockDragLeave(event)" ondrop="blockDrop(event)"' : ''}
+              title="${sec.notes || ''}">
+              ${canEdit ? `<div class="resize-handle resize-left" onmousedown="startResize(event, ${arr.id}, ${idx}, 'left')"></div>` : ''}
+              ${opsCount > 0 ? `<div class="block-ops-indicator">${(sec.ops||[]).slice(0,5).map(()=>'<span class="block-op-dot"></span>').join('')}${opsCount>5?'...':''}</div>` : ''}
+              <span class="block-label" ${canEdit ? `onclick="openBlockEditor(${arr.id},${idx})"` : ''} style="${canEdit ? 'cursor:pointer' : 'cursor:default'}">${t(sec.type)}</span>
+              <span class="block-bars">${sec.bars}</span>
+              ${canEdit ? `<div class="resize-handle resize-right" onmousedown="startResize(event, ${arr.id}, ${idx}, 'right')"></div>` : ''}
+            </div>`;
+          }).join('') : `<span class="timeline-empty">${t('noSections')}</span>`}
+        </div>
+        ${canEdit ? `<div class="timeline-controls">
+          ${sectionTypes.map(st => `<button class="block-btn block-${st.key}" onclick="addBlockToArr(${arr.id},'${st.key}')">${t(st.key)}</button>`).join('')}
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════════
+   STRATEGIES
+════════════════════════════════════════ */
+function addStrategy() {
+  if(!currentUser) { showAuthModal(); return; }
+  const title = document.getElementById('strategy-title').value.trim();
+  const desc = document.getElementById('strategy-desc').value.trim();
+  const cat = document.getElementById('strategy-cat').value;
+  if(!title || !desc) return showToast(t('fillFields'));
+  const strats = getDB('strategies');
+  strats.unshift({id:Date.now(), title, desc, category:cat, userId: currentUser.id});
+  setDB('strategies', strats);
+  document.getElementById('strategy-title').value = '';
+  document.getElementById('strategy-desc').value = '';
+  renderStrategies();
+  showToast(t('saved'));
+}
+function deleteStrategy(id) {
+  if(!confirm(t('confirmDelete'))) return;
+  setDB('strategies', getDB('strategies').filter(s => s.id !== id));
+  renderStrategies();
+  showToast(t('deleted'));
+}
+function renderStrategies() {
+  const strats = getDB('strategies');
+  document.getElementById('strategies-total').textContent = strats.length;
+  const container = document.getElementById('strategies-list');
+  if(!strats.length) { container.innerHTML = `<div class="empty-state">${t('noStrategies')}</div>`; return; }
+  container.innerHTML = strats.map(s => `
+    <div class="strategy-card">
+      <div class="strategy-title">${escapeHtml(s.title)}</div>
+      <div class="strategy-desc">${escapeHtml(s.desc).replace(/\n/g,'<br>')}</div>
+      <span class="strategy-category">${s.category}</span>
+      ${adminLoggedIn ? `<button class="btn-danger" style="margin-left:12px" onclick="deleteStrategy(${s.id})">${t('delete')}</button>` : ''}
+    </div>
+  `).join('');
+}
+
+/* ════════════════════════════════════════
+   ADMIN
+════════════════════════════════════════ */
+function adminLogin() {
+  const pass = document.getElementById('admin-pass-input').value;
+  if (pass === getPassword()) {
+    adminLoggedIn = true;
+    document.getElementById('admin-pass-error').style.display = 'none';
+    document.getElementById('admin-pass-input').value = '';
+    renderAdminView();
+  } else {
+    document.getElementById('admin-pass-error').style.display = 'block';
+  }
+}
+function adminLogout() { adminLoggedIn = false; renderAdminView(); }
+function renderAdminView() {
+  document.getElementById('admin-login-panel').style.display = adminLoggedIn ? 'none' : 'block';
+  document.getElementById('admin-dashboard').style.display = adminLoggedIn ? 'block' : 'none';
+  if (adminLoggedIn) { populateCategorySelect(); renderAdminCatsList(); renderAdminOpsList(); showAdminTab(activeAdminTab); }
+}
+function showAdminTab(tab) {
+  activeAdminTab = tab;
+  ['categories','operations','data','settings'].forEach(t => {
+    document.getElementById('atab-'+t).classList.toggle('active', t === tab);
+    document.getElementById('apanel-'+t).classList.toggle('active', t === tab);
+  });
+}
+function populateCategorySelect() {
+  const sel = document.getElementById('new-op-category');
+  sel.innerHTML = '';
+  const gM = document.createElement('optgroup'); gM.label = t('navMusic');
+  getMusicAllData().forEach(cat => { const o = document.createElement('option'); o.value = cat.key+'__music'; o.textContent = (cat.emoji||'')+' '+(cat[lang]||cat.it); gM.appendChild(o); });
+  sel.appendChild(gM);
+  const gC = document.createElement('optgroup'); gC.label = t('navCreative');
+  getCreativeAllData().forEach(cat => { const o = document.createElement('option'); o.value = cat.key+'__creative'; o.textContent = (cat.emoji||'')+' '+(cat[lang]||cat.it); gC.appendChild(o); });
+  sel.appendChild(gC);
+}
+function adminAddCategory() {
+  const nameIt = document.getElementById('new-cat-name-it').value.trim();
+  const nameEn = document.getElementById('new-cat-name-en').value.trim();
+  const emoji = document.getElementById('new-cat-emoji').value.trim() || '📌';
+  const section = document.getElementById('new-cat-section').value;
+  if (!nameIt) return;
+  const ad = getAdminData();
+  const key = 'custom_' + Date.now();
+  const catObj = {key, emoji, it:nameIt, en:nameEn||nameIt, section, items:[]};
+  if (section === 'music') { ad.musicCategories = ad.musicCategories || {}; ad.musicCategories[key] = catObj; }
+  else { ad.creativeCategories = ad.creativeCategories || {}; ad.creativeCategories[key] = catObj; }
+  setAdminData(ad);
+  document.getElementById('new-cat-name-it').value = '';
+  document.getElementById('new-cat-name-en').value = '';
+  document.getElementById('new-cat-emoji').value = '';
+  populateCategorySelect(); renderAdminCatsList(); renderSection('music'); renderSection('creative');
+  showToast(t('saved'));
+}
+function adminDeleteCategory(key, section) {
+  if (!confirm(t('confirmDelete'))) return;
+  const ad = getAdminData();
+  if (section === 'music') delete (ad.musicCategories||{})[key]; else delete (ad.creativeCategories||{})[key];
+  setAdminData(ad);
+  populateCategorySelect(); renderAdminCatsList(); renderSection('music'); renderSection('creative');
+  showToast(t('deleted'));
+}
+function renderAdminCatsList() {
+  const ad = getAdminData();
+  const all = [...Object.values(ad.musicCategories||{}), ...Object.values(ad.creativeCategories||{})];
+  const el = document.getElementById('admin-cats-list');
+  if (!all.length) { el.innerHTML = `<div class="empty-state">${t('noCustomCats')}</div>`; return; }
+  el.innerHTML = `<div class="admin-list">${all.map(cat => `
+    <div class="admin-list-item">
+      <span class="admin-list-item-emoji">${cat.emoji||'📌'}</span>
+      <div class="admin-list-item-info"><div class="admin-list-item-name">${cat.it}${cat.en&&cat.en!==cat.it?' / '+cat.en:''}</div><div class="admin-list-item-meta">${cat.section}</div></div>
+      <button class="btn-danger" onclick="adminDeleteCategory('${cat.key}','${cat.section}')">${t('delete')}</button>
+    </div>`).join('')}</div>`;
+}
+function adminAddOperation() {
+  const catVal = document.getElementById('new-op-category').value;
+  if (!catVal) return;
+  const [catKey, sectionType] = catVal.split('__');
+  const nameIt = document.getElementById('new-op-name-it').value.trim();
+  const nameEn = document.getElementById('new-op-name-en').value.trim();
+  const descIt = document.getElementById('new-op-desc-it').value.trim();
+  const descEn = document.getElementById('new-op-desc-en').value.trim();
+  if (!nameIt) return;
+  const newOp = {it:{name:nameIt, desc:descIt}, en:{name:nameEn||nameIt, desc:descEn||descIt}};
+  const ad = getAdminData();
+  ad.extraOps = ad.extraOps || {};
+  ad.extraOps[catKey] = ad.extraOps[catKey] || [];
+  ad.extraOps[catKey].push(newOp);
+  setAdminData(ad);
+  document.getElementById('new-op-name-it').value = '';
+  document.getElementById('new-op-name-en').value = '';
+  document.getElementById('new-op-desc-it').value = '';
+  document.getElementById('new-op-desc-en').value = '';
+  renderAdminOpsList(); renderSection('music'); renderSection('creative');
+  showToast(t('saved'));
+}
+function adminDeleteOp(catKey, idx) {
+  if (!confirm(t('confirmDelete'))) return;
+  const ad = getAdminData();
+  if (ad.extraOps && ad.extraOps[catKey]) { ad.extraOps[catKey].splice(idx,1); if (!ad.extraOps[catKey].length) delete ad.extraOps[catKey]; }
+  setAdminData(ad);
+  renderAdminOpsList(); renderSection('music'); renderSection('creative');
+  showToast(t('deleted'));
+}
+function renderAdminOpsList() {
+  const ad = getAdminData();
+  const allEntries = Object.entries(ad.extraOps || {}).flatMap(([catKey, ops]) => ops.map((op,i) => ({catKey, op, idx:i})));
+  const el = document.getElementById('admin-ops-list');
+  if (!allEntries.length) { el.innerHTML = `<div class="empty-state">${t('noCustomOps')}</div>`; return; }
+  el.innerHTML = `<div class="admin-list">${allEntries.map(({catKey, op, idx}) => `
+    <div class="admin-list-item">
+      <div class="admin-list-item-info"><div class="admin-list-item-name">${op[lang]?.name||op.it?.name||''}</div><div class="admin-list-item-meta">${op[lang]?.desc||op.it?.desc||''} → ${catKey}</div></div>
+      <button class="btn-danger" onclick="adminDeleteOp('${catKey}',${idx})">${t('delete')}</button>
+    </div>`).join('')}</div>`;
+}
+function adminChangePassword() {
+  const curr = document.getElementById('current-pass').value;
+  const next = document.getElementById('new-pass').value.trim();
+  const errEl = document.getElementById('pass-change-error');
+  if (curr !== getPassword()) { errEl.textContent = t('passWrong'); errEl.style.display = 'block'; return; }
+  if (!next) return;
+  setPassword(next);
+  errEl.style.display = 'none';
+  document.getElementById('current-pass').value = '';
+  document.getElementById('new-pass').value = '';
+  showToast(t('passUpdated'));
+}
+function exportAllData() {
+  const data = {ideas:getDB('ideas'), arrangements:getDB('arrangements'), strategies:getDB('strategies'), admin:getAdminData()};
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'escape-the-loop-backup.json'; a.click();
+  showToast(t('dataExported'));
+}
+function importAllData(event) {
+  const file = event.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(data.ideas) setDB('ideas', data.ideas);
+      if(data.arrangements) setDB('arrangements', data.arrangements);
+      if(data.strategies) setDB('strategies', data.strategies);
+      if(data.admin) setAdminData(data.admin);
+      renderSection('music'); renderSection('creative'); renderIdeas(); renderArrangements(); renderStrategies();
+      if(adminLoggedIn) renderAdminView();
+      showToast(t('dataImported'));
+    } catch { showToast(t('jsonError')); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+function clearAllData() {
+  if(!confirm(t('confirmDelete'))) return;
+  if(!confirm(t('confirmDeleteAll'))) return;
+  ['etl_ideas','etl_arrangements','etl_strategies','etl_admin'].forEach(k => localStorage.removeItem(k));
+  renderSection('music'); renderSection('creative'); renderIdeas(); renderArrangements(); renderStrategies(); renderAdminView();
+  showToast(t('deleted'));
+}
+
+/* ════════════════════════════════════════
+   UTILS
+════════════════════════════════════════ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('etl_lang', l);
+  applyI18n();
+  renderSection('music');
+  renderSection('creative');
+  if(activeSection === 'community') renderIdeas();
+  if(activeSection === 'arrangements') renderArrangements();
+  if(activeSection === 'strategies') renderStrategies();
+}
+
+/* ════════════════════════════════════════
+   USER AUTHENTICATION
+════════════════════════════════════════ */
+function getUsers() { try { return JSON.parse(localStorage.getItem('etl_users') || '[]'); } catch { return []; } }
+function setUsers(users) { localStorage.setItem('etl_users', JSON.stringify(users)); }
+function getCurrentUserId() { return localStorage.getItem('etl_current_user'); }
+function setCurrentUserId(id) { if(id) localStorage.setItem('etl_current_user', id); else localStorage.removeItem('etl_current_user'); }
+
+function showAuthModal() {
+  document.getElementById('auth-modal').classList.add('show');
+  showAuthTab('login');
+}
+function closeAuthModal() {
+  document.getElementById('auth-modal').classList.remove('show');
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('register-error').style.display = 'none';
+}
+function showAuthTab(tab) {
+  document.getElementById('auth-tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('auth-tab-register').classList.toggle('active', tab === 'register');
+  document.getElementById('auth-form-login').classList.toggle('active', tab === 'login');
+  document.getElementById('auth-form-register').classList.toggle('active', tab === 'register');
+}
+
+function loginUser() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errorEl = document.getElementById('login-error');
+
+  if(!username || !password) { errorEl.textContent = t('fillAllFields'); errorEl.style.display = 'block'; return; }
+
+  const users = getUsers();
+  const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+
+  if(!user) { errorEl.textContent = t('userNotFound'); errorEl.style.display = 'block'; return; }
+  if(user.password !== password) { errorEl.textContent = t('wrongCredentials'); errorEl.style.display = 'block'; return; }
+
+  currentUser = user;
+  setCurrentUserId(user.id);
+  closeAuthModal();
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
+  renderProfile();
+  renderArrangements();
+  renderStrategies();
+  showToast(t('welcome') + ' ' + user.username + '!');
+}
+
+function registerUser() {
+  const username = document.getElementById('register-username').value.trim();
+  const email = document.getElementById('register-email').value.trim();
+  const password = document.getElementById('register-password').value;
+  const password2 = document.getElementById('register-password2').value;
+  const errorEl = document.getElementById('register-error');
+
+  if(!username || !email || !password) { errorEl.textContent = t('fillAllFields'); errorEl.style.display = 'block'; return; }
+  if(password !== password2) { errorEl.textContent = t('passwordMismatch'); errorEl.style.display = 'block'; return; }
+
+  const users = getUsers();
+  if(users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
+    errorEl.textContent = t('userExists'); errorEl.style.display = 'block'; return;
+  }
+
+  const newUser = {
+    id: 'user_' + Date.now(),
+    username,
+    email,
+    password,
+    createdAt: new Date().toISOString()
+  };
+  users.push(newUser);
+  setUsers(users);
+
+  currentUser = newUser;
+  setCurrentUserId(newUser.id);
+  closeAuthModal();
+  document.getElementById('register-username').value = '';
+  document.getElementById('register-email').value = '';
+  document.getElementById('register-password').value = '';
+  document.getElementById('register-password2').value = '';
+  renderProfile();
+  showToast(t('welcome') + ' ' + newUser.username + '!');
+}
+
+function logoutUser() {
+  currentUser = null;
+  setCurrentUserId(null);
+  renderProfile();
+  renderArrangements();
+  renderStrategies();
+}
+
+function loadCurrentUser() {
+  const userId = getCurrentUserId();
+  if(userId) {
+    const users = getUsers();
+    currentUser = users.find(u => u.id === userId) || null;
+  }
+}
+
+function getUserById(userId) {
+  return getUsers().find(u => u.id === userId);
+}
+
+function renderProfile() {
+  const loggedOut = document.getElementById('profile-logged-out');
+  const loggedIn = document.getElementById('profile-logged-in');
+
+  if(!currentUser) {
+    loggedOut.style.display = 'block';
+    loggedIn.style.display = 'none';
+    return;
+  }
+
+  loggedOut.style.display = 'none';
+  loggedIn.style.display = 'block';
+
+  document.getElementById('profile-avatar').textContent = currentUser.username.charAt(0).toUpperCase();
+  document.getElementById('profile-username').textContent = currentUser.username;
+  document.getElementById('profile-email').textContent = currentUser.email;
+
+  const userArrangements = getDB('arrangements').filter(a => a.userId === currentUser.id);
+  const userStrategies = getDB('strategies').filter(s => s.userId === currentUser.id);
+
+  document.getElementById('profile-arr-count').textContent = userArrangements.length;
+  document.getElementById('profile-strat-count').textContent = userStrategies.length;
+
+  // Render user's arrangements
+  const arrContainer = document.getElementById('profile-arrangements');
+  if(!userArrangements.length) {
+    arrContainer.innerHTML = `<div class="profile-empty">${t('noSongs')}</div>`;
+  } else {
+    arrContainer.innerHTML = userArrangements.map(arr => `
+      <div class="arrangement-card" style="margin-bottom:8px">
+        <div class="arrangement-header">
+          <div class="arrangement-cover">${arr.cover ? `<img src="${escapeHtml(arr.cover)}" alt="">` : '🎵'}</div>
+          <div class="arrangement-info">
+            <div class="arrangement-title">${escapeHtml(arr.title)}</div>
+            <div class="arrangement-artist">${escapeHtml(arr.artist)}</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Render user's strategies
+  const stratContainer = document.getElementById('profile-strategies');
+  if(!userStrategies.length) {
+    stratContainer.innerHTML = `<div class="profile-empty">${t('noStrategies')}</div>`;
+  } else {
+    stratContainer.innerHTML = userStrategies.map(s => `
+      <div class="strategy-card" style="margin-bottom:8px">
+        <div class="strategy-title">${escapeHtml(s.title)}</div>
+        <span class="strategy-category">${s.category}</span>
+      </div>
+    `).join('');
+  }
+}
+
+function showPublicProfile(userId) {
+  const user = getUserById(userId);
+  if(!user) return;
+
+  document.getElementById('public-avatar').textContent = user.username.charAt(0).toUpperCase();
+  document.getElementById('public-username').textContent = user.username;
+  const joinDate = new Date(user.createdAt).toLocaleDateString(lang === 'it' ? 'it-IT' : 'en-US');
+  document.getElementById('public-joined').textContent = t('joinedOn') + ' ' + joinDate;
+
+  const userArrangements = getDB('arrangements').filter(a => a.userId === userId);
+  const userStrategies = getDB('strategies').filter(s => s.userId === userId);
+
+  document.getElementById('public-stats').innerHTML = `
+    <div class="user-stat">
+      <div class="user-stat-value">${userArrangements.length}</div>
+      <div class="user-stat-label">${t('statArrangements')}</div>
+    </div>
+    <div class="user-stat">
+      <div class="user-stat-value">${userStrategies.length}</div>
+      <div class="user-stat-label">${t('statStrategies')}</div>
+    </div>
+  `;
+
+  document.getElementById('public-arrangements').innerHTML = userArrangements.length ? userArrangements.map(arr => `
+    <div class="arrangement-card" style="margin-bottom:8px">
+      <div class="arrangement-header">
+        <div class="arrangement-cover">${arr.cover ? `<img src="${escapeHtml(arr.cover)}" alt="">` : '🎵'}</div>
+        <div class="arrangement-info">
+          <div class="arrangement-title">${escapeHtml(arr.title)}</div>
+          <div class="arrangement-artist">${escapeHtml(arr.artist)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('') : `<div class="profile-empty">${t('noSongs')}</div>`;
+
+  document.getElementById('public-strategies').innerHTML = userStrategies.length ? userStrategies.map(s => `
+    <div class="strategy-card" style="margin-bottom:8px">
+      <div class="strategy-title">${escapeHtml(s.title)}</div>
+      <span class="strategy-category">${s.category}</span>
+    </div>
+  `).join('') : `<div class="profile-empty">${t('noStrategies')}</div>`;
+
+  document.getElementById('public-profile-modal').classList.add('show');
+}
+
+function closePublicProfile() {
+  document.getElementById('public-profile-modal').classList.remove('show');
+}
+
+/* ════════════════════════════════════════
+   BLOCK RESIZE
+════════════════════════════════════════ */
+let resizing = null;
+
+function startResize(e, arrId, blockIdx, side) {
+  e.preventDefault();
+  e.stopPropagation();
+  const arrs = getDB('arrangements');
+  const arr = arrs.find(a => a.id === arrId);
+  if (!arr || !arr.sections[blockIdx]) return;
+
+  const block = e.target.closest('.timeline-block');
+  const track = block.closest('.timeline-track');
+  track.classList.add('resizing');
+
+  resizing = {
+    arrId,
+    blockIdx,
+    side,
+    startX: e.clientX,
+    startBars: arr.sections[blockIdx].bars || 8,
+    block,
+    track
+  };
+
+  document.addEventListener('mousemove', doResize);
+  document.addEventListener('mouseup', stopResize);
+}
+
+function doResize(e) {
+  if (!resizing) return;
+
+  const deltaX = e.clientX - resizing.startX;
+  const deltaBars = Math.round((deltaX / PIXELS_PER_BAR) * 2) / 2; // snap to 0.5 bars
+
+  let newBars;
+  if (resizing.side === 'right') {
+    newBars = Math.max(0.5, Math.min(64, resizing.startBars + deltaBars));
+  } else {
+    newBars = Math.max(0.5, Math.min(64, resizing.startBars - deltaBars));
+  }
+
+  // Update visual preview
+  resizing.block.style.width = (newBars * PIXELS_PER_BAR) + 'px';
+  resizing.block.querySelector('.block-bars').textContent = newBars;
+}
+
+function stopResize(e) {
+  if (!resizing) return;
+
+  const deltaX = e.clientX - resizing.startX;
+  const deltaBars = Math.round((deltaX / PIXELS_PER_BAR) * 2) / 2;
+
+  let newBars;
+  if (resizing.side === 'right') {
+    newBars = Math.max(0.5, Math.min(64, resizing.startBars + deltaBars));
+  } else {
+    newBars = Math.max(0.5, Math.min(64, resizing.startBars - deltaBars));
+  }
+
+  // Save to DB
+  const arrs = getDB('arrangements');
+  const arr = arrs.find(a => a.id === resizing.arrId);
+  if (arr && arr.sections[resizing.blockIdx]) {
+    arr.sections[resizing.blockIdx].bars = newBars;
+    setDB('arrangements', arrs);
+  }
+
+  resizing.track.classList.remove('resizing');
+  document.removeEventListener('mousemove', doResize);
+  document.removeEventListener('mouseup', stopResize);
+  resizing = null;
+
+  renderArrangements();
+}
+
+/* ════════════════════════════════════════
+   BLOCK DRAG & DROP REORDER
+════════════════════════════════════════ */
+let draggedBlock = null;
+
+function blockDragStart(e) {
+  // Don't start drag if we're resizing
+  if (resizing) {
+    e.preventDefault();
+    return;
+  }
+
+  draggedBlock = {
+    arrId: parseInt(e.target.dataset.arrId),
+    blockIdx: parseInt(e.target.dataset.blockIdx)
+  };
+  e.target.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', ''); // required for Firefox
+}
+
+function blockDragEnd(e) {
+  e.target.classList.remove('dragging');
+  document.querySelectorAll('.timeline-block').forEach(b => {
+    b.classList.remove('drag-over-left', 'drag-over-right');
+  });
+  draggedBlock = null;
+}
+
+function blockDragOver(e) {
+  e.preventDefault();
+  if (!draggedBlock) return;
+
+  const target = e.target.closest('.timeline-block');
+  if (!target) return;
+
+  const targetArrId = parseInt(target.dataset.arrId);
+  const targetIdx = parseInt(target.dataset.blockIdx);
+
+  // Only allow reorder within same arrangement
+  if (targetArrId !== draggedBlock.arrId) return;
+  if (targetIdx === draggedBlock.blockIdx) return;
+
+  e.dataTransfer.dropEffect = 'move';
+
+  // Determine if dropping before or after based on mouse position
+  const rect = target.getBoundingClientRect();
+  const midpoint = rect.left + rect.width / 2;
+
+  target.classList.remove('drag-over-left', 'drag-over-right');
+  if (e.clientX < midpoint) {
+    target.classList.add('drag-over-left');
+  } else {
+    target.classList.add('drag-over-right');
+  }
+}
+
+function blockDragLeave(e) {
+  const target = e.target.closest('.timeline-block');
+  if (target) {
+    target.classList.remove('drag-over-left', 'drag-over-right');
+  }
+}
+
+function blockDrop(e) {
+  e.preventDefault();
+  if (!draggedBlock) return;
+
+  const target = e.target.closest('.timeline-block');
+  if (!target) return;
+
+  const targetArrId = parseInt(target.dataset.arrId);
+  const targetIdx = parseInt(target.dataset.blockIdx);
+
+  if (targetArrId !== draggedBlock.arrId) return;
+  if (targetIdx === draggedBlock.blockIdx) return;
+
+  // Determine drop position
+  const rect = target.getBoundingClientRect();
+  const midpoint = rect.left + rect.width / 2;
+  const dropBefore = e.clientX < midpoint;
+
+  // Reorder in DB
+  const arrs = getDB('arrangements');
+  const arr = arrs.find(a => a.id === draggedBlock.arrId);
+  if (!arr) return;
+
+  const [movedSection] = arr.sections.splice(draggedBlock.blockIdx, 1);
+  let newIdx = dropBefore ? targetIdx : targetIdx + 1;
+  if (draggedBlock.blockIdx < targetIdx) newIdx--;
+  arr.sections.splice(newIdx, 0, movedSection);
+
+  setDB('arrangements', arrs);
+
+  target.classList.remove('drag-over-left', 'drag-over-right');
+  draggedBlock = null;
+
+  renderArrangements();
+}
+
+/* ════════════════════════════════════════
+   BLOCK OPS (Musical Operations)
+════════════════════════════════════════ */
+function renderBlockOpsList() {
+  const container = document.getElementById('block-ops-list');
+  const musicCategories = getMusicAllData();
+
+  container.innerHTML = musicCategories.map(cat => {
+    const catName = cat[lang] || cat.it;
+    const catEmoji = cat.emoji || '📌';
+
+    return `
+      <div class="ops-category" data-cat="${cat.key}">
+        <div class="ops-category-header" onclick="toggleOpsCategory('${cat.key}')">
+          <span class="cat-emoji">${catEmoji}</span>
+          <span>${catName}</span>
+          <span class="cat-toggle">▼</span>
+        </div>
+        <div class="ops-category-items">
+          ${cat.items.map(op => {
+            const name = op[lang]?.name || op.it?.name || '';
+            const desc = op[lang]?.desc || op.it?.desc || '';
+            const isSelected = selectedBlockOps.includes(name);
+            return `<span class="ops-tag${isSelected ? ' selected' : ''}" onclick="toggleBlockOp('${escapeHtml(name)}')" title="${escapeHtml(desc)}">${escapeHtml(name)}</span>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  renderSelectedBlockOps();
+}
+
+function toggleOpsCategory(catKey) {
+  const cat = document.querySelector(`.ops-category[data-cat="${catKey}"]`);
+  if (cat) {
+    cat.classList.toggle('collapsed');
+    const toggle = cat.querySelector('.cat-toggle');
+    if (toggle) toggle.textContent = cat.classList.contains('collapsed') ? '▶' : '▼';
+  }
+}
+
+function renderSelectedBlockOps() {
+  const container = document.getElementById('block-ops-selected');
+  if (!selectedBlockOps.length) {
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = selectedBlockOps.map(op =>
+    `<span class="ops-tag-selected">${escapeHtml(op)}<span class="remove-tag" onclick="removeBlockOp('${escapeHtml(op)}')">&times;</span></span>`
+  ).join('');
+}
+
+function toggleBlockOp(opName) {
+  const idx = selectedBlockOps.indexOf(opName);
+  if (idx >= 0) {
+    selectedBlockOps.splice(idx, 1);
+  } else {
+    selectedBlockOps.push(opName);
+  }
+  renderBlockOpsList();
+}
+
+function removeBlockOp(opName) {
+  selectedBlockOps = selectedBlockOps.filter(o => o !== opName);
+  renderBlockOpsList();
+}
+
+/* ════════════════════════════════════════
+   ABLETON .ALS EXPORT/IMPORT
+════════════════════════════════════════ */
+
+// Map section types to standard names for Ableton
+const sectionTypeNames = {
+  intro: 'Intro', verse: 'Verse', prechorus: 'Pre-Chorus', chorus: 'Chorus',
+  bridge: 'Bridge', breakdown: 'Breakdown', buildup: 'Build-Up', drop: 'Drop',
+  outro: 'Outro', break: 'Break', solo: 'Solo', hook: 'Hook',
+  interlude: 'Interlude', riser: 'Riser'
+};
+
+// Reverse map: lowercase name to section type key
+const nameToSectionType = {};
+Object.entries(sectionTypeNames).forEach(([key, name]) => {
+  nameToSectionType[name.toLowerCase()] = key;
+  nameToSectionType[key] = key;
+});
+
+function exportArrangementALS(arrId) {
+  const arrs = getDB('arrangements');
+  const arr = arrs.find(a => a.id === arrId);
+  if (!arr || !arr.sections?.length) {
+    showToast(t('noSections'));
+    return;
+  }
+
+  // Calculate clip positions (4 beats per bar)
+  const beatsPerBar = 4;
+  let currentBeat = 0;
+  const clips = arr.sections.map((sec, idx) => {
+    const startBeat = currentBeat;
+    const endBeat = currentBeat + (sec.bars || 8) * beatsPerBar;
+    currentBeat = endBeat;
+    const clipName = sectionTypeNames[sec.type] || sec.type;
+    return { name: clipName, start: startBeat, end: endBeat, bars: sec.bars || 8 };
+  });
+
+  // Generate clips XML
+  const clipsXML = clips.map((clip, idx) => `
+									<MidiClip Id="${idx}" Time="${clip.start}">
+										<LomId Value="0" />
+										<LomIdView Value="0" />
+										<CurrentStart Value="${clip.start}" />
+										<CurrentEnd Value="${clip.end}" />
+										<Loop>
+											<LoopStart Value="0" />
+											<LoopEnd Value="${clip.end - clip.start}" />
+											<StartRelative Value="0" />
+											<LoopOn Value="true" />
+											<OutMarker Value="${clip.end - clip.start}" />
+											<HiddenLoopStart Value="0" />
+											<HiddenLoopEnd Value="4" />
+										</Loop>
+										<Name Value="${escapeXml(clip.name)}" />
+										<Annotation Value="" />
+										<Color Value="${(idx * 2 + 22) % 70}" />
+										<LaunchMode Value="0" />
+										<LaunchQuantisation Value="0" />
+										<TimeSignature>
+											<TimeSignatures>
+												<RemoteableTimeSignature Id="0">
+													<Numerator Value="4" />
+													<Denominator Value="4" />
+													<Time Value="0" />
+												</RemoteableTimeSignature>
+											</TimeSignatures>
+										</TimeSignature>
+										<Envelopes>
+											<Envelopes />
+										</Envelopes>
+										<ScrollerTimePreserver>
+											<LeftTime Value="0" />
+											<RightTime Value="${clip.end - clip.start}" />
+										</ScrollerTimePreserver>
+										<TimeSelection>
+											<AnchorTime Value="0" />
+											<OtherTime Value="0" />
+										</TimeSelection>
+										<Legato Value="false" />
+										<Ram Value="false" />
+										<GrooveSettings>
+											<GrooveId Value="-1" />
+										</GrooveSettings>
+										<Disabled Value="false" />
+										<VelocityAmount Value="0" />
+										<FollowAction>
+											<FollowTime Value="4" />
+											<IsLinked Value="true" />
+											<LoopIterations Value="1" />
+											<FollowActionA Value="4" />
+											<FollowActionB Value="0" />
+											<FollowChanceA Value="100" />
+											<FollowChanceB Value="0" />
+											<JumpIndexA Value="1" />
+											<JumpIndexB Value="1" />
+											<FollowActionEnabled Value="false" />
+										</FollowAction>
+										<Grid>
+											<FixedNumerator Value="1" />
+											<FixedDenominator Value="16" />
+											<GridIntervalPixel Value="20" />
+											<Ntoles Value="2" />
+											<SnapToGrid Value="true" />
+											<Fixed Value="true" />
+										</Grid>
+										<FreezeStart Value="0" />
+										<FreezeEnd Value="0" />
+										<IsWarped Value="true" />
+										<TakeId Value="${idx + 1}" />
+										<Notes>
+											<KeyTracks />
+											<PerNoteEventStore>
+												<EventLists />
+											</PerNoteEventStore>
+											<NoteIdGenerator>
+												<NextId Value="1" />
+											</NoteIdGenerator>
+										</Notes>
+										<BankSelectCoarse Value="-1" />
+										<BankSelectFine Value="-1" />
+										<ProgramChange Value="-1" />
+										<NoteEditorFoldInZoom Value="-1" />
+										<NoteEditorFoldInScroll Value="0" />
+										<NoteEditorFoldOutZoom Value="3072" />
+										<NoteEditorFoldOutScroll Value="-1264" />
+										<NoteEditorFoldScaleZoom Value="-1" />
+										<NoteEditorFoldScaleScroll Value="0" />
+										<NoteSpellingPreference Value="0" />
+										<ExpressionGrid>
+											<FixedNumerator Value="1" />
+											<FixedDenominator Value="16" />
+											<GridIntervalPixel Value="20" />
+											<Ntoles Value="2" />
+											<SnapToGrid Value="false" />
+											<Fixed Value="false" />
+										</ExpressionGrid>
+									</MidiClip>`).join('');
+
+  // Use embedded template (split in two parts: p1 ends with <Events>, p2 starts with </Events>)
+  try {
+    const templateP1B64 = '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';
+    const templateP2B64 = 'H4sIAAAAAAAEAO193XPbuJLvs7fq/g+uuXUfYwn8kMQpnr3lxHHiPU7stXJmdvdli5HgmBWJ1KGkJJ6t+79fACRBAARAgIJkO1EepsYiPrsbPzQaje548PYbzDbrf/1f/3JS/YvPt5t8mWzSPPtUJNn6Pi+Wf6Tw+3STbCBT7iS+WtMCtzCbp9mX0z+SxRb+7bf7ZLGGv50OuOKf0iU8z+akCK245grFA7POUbkCff4Ci6Y8/RoP3izSFe4t+bxoKsV3cJYXc1gwzVytz4slnKuHHX9KvsI3+TbbwKIuNWRLxINWs/GHdJ6+ybNNkS8WsGBoGze/fkqKL3CzPhueXs3/9hsIJ4H3G0uI63z29W32DS7yFZR2jKfZbk3bF6B9+Z19gc6+gLYvj/YVOJiXp+3Lp32FDvrytX0FtK+Rg74CbV8h7WvsoK9Q29eI9jVx0NdI29eY9hU56Gus7WtS9xUOHfQ10fYV0b6Ag74i/VqmwBG6AA7QgRwUOkIn0KHHDkDBI3QBHkCPHoDCR+gCPoAePwAFkNAFgAA9ggAKIaELCAF6DAEUREIXIAL0KAIojIQuYATocQRQIBm5ABKgRxJAoWTkAkqAHks8iiUjF1ji6bHEo1gy6sYSg9469BCKJSMniogeSzyKJSMXWOLpscSjWDJygSWeHks8iiUjF1ji6bHEo1gycoElnh5LPIolIxdY4umxxKNYMnaBJZ4eSzyKJWMXWOLpscSnWDJ2gSW+Hkt8iiVjF1ji67HEp1gydoElfsephmLJ2MmxRo8lPsWSsQss8fVY4lMsGbvAEl+PJT7FkrELLPH1WOJTLBm7wBJfjyU+xZKJCyzx9VjiUyyZuMASX48lAcWSiQssCfRYElAsmbjAkkCPJQHFkokLLAn0WBJQLJm4wJKgw0ZCsWTixEiix5KAYsnEBZYEeiwJKJZMXGBJoMeSgGLJxAWWBHosCSiWRC6wJNBjSUCxJHKBJYEeS0KKJZELLAn1WBJSLIlcYEmox5KQYknkAktCPZaEFEsiF1gS6rEkpFgSucCSsMPiSrEkcmJy1WNJSLEkcoEloR5LQoolkQssCfVYEtZYEg1dYEmox5Iwor25wJJQjyWjIe3NBZaM9FgyArQ3F1gy0mPJyKO9ucCSkR5LRj7tzQWWjPRYMgpoby6wZKTHklFIe3OBJaOO+5sR7a0bS7ot9CM9lozGtDcXWDLSY8mIYglwgSUjPZaMKJYAF1gy0mPJmGIJcIElYz2WjCmWABdYMtZjyZhiCXCBJWM9lowplgAXWDLWY8mYYglwgSVjPZaMKZYAF1gy1mPJmGIJcKGXjDtugymWACfXwXosGVMs8VxgyViPJWOKJZ4LLBnrsWRCscRzgSUTPZZMKJZ4LrBkoseSCcUSzwWWTPRYMqFY4rnAkokeSyYUSzwXWDLRY8mEYonnAksmeiyZUCzxXGDJRI8lE4olngssmXT4llAs8Z04l+ixZEKxxHeBJRM9lkQUS3wXWBLpsSSiWOK7wJJIjyURxRLfBZZEeiyJKJb4LrAk0mNJRLHEd4ElkR5LIoolvgssifRYElEs8V1gSaTHkohiie8CSyI9lkQUSwIXWBJ1eKpRLAmcuKp1+apRMHHi5Yra6+iPwomBp6tJfx3+akMKKE68XVF7Hf1RSHHi8Yra6+iPgooTr1fUXkd/FFaceL6i9jr6o8DixPsVtdfRH4UWJx6wqL2O/ii4OPGCRe119EfhxYknLGpP3x91ho3cOMN2esNSfDFwhzXprwNfqENs5MYhtssjlrrERm5cYrt8YqlTbOTGKbbLK5a6xUZu3GK7/GKpY2zkxjG2yzOWusZGblxju3xjqXNs5MY5tss7lrrHRm7cYzv8YwF1kI2cOMiCDg9ZQF1kIycusqDDRxZQJ9nIiZMs6PCSBdRNNnLiJgs6/GQBdZSNnDjKgg5PWUBdZSMnrrKgw1cWUGfZyImzLOjwlgXUXTZy4i4LOvxlAXWYjZw4zIIOj1lAXWYjJy6zoMNnFlCn2ciJ0yxgvGbjgeI1IvqQpNkU/nMLs1nzejG+LCD8C7Z+x2NZXs2lgyg/4Wea8s9X67c/Vkk2bx5aboot984yfl3A5Gu+3bSLtt5kxjcZM331qE7iD0m2TRaqPrmHroRylAn2oCs2xY4C0//NTXZzf//poYDrh3wx597bfkizulkEv2y7eAo/6KWtNxY61bccDxhCxR/y+XZBBjjNt8WsfNMqZ9dtUiRLuEGycp2uN38WyWoFi1NC6FbRPM02EJaEQ4sl4MUiWW+mcAFnGzivn+NeId7+UEgRUxy/4K1p3lHlFs0cbu7gPUMaUpgtOJCXJLyF8+msSFebNS+zl4iaOjGcPuTbxRz993vZ7kdENHXpf6xhwZbgPp5nWb4hzJF+rjmGSP1jo52lvGT8YQVv083s4TXM5mgg60/bjHms3VqMmPjTRb7B7GeBq/r5tJQDfokoV2FTj/mtPXaCZO2C8ftkPd3kK+UiPok/QjhHPCWwpV7rksb5CYlA/+InJO4kL35CIiq/+AmJuvaLn5CozL/4CYmnhRc/IfE48vIm1PzEbU9IwcnSTV6gfe1ttl1KPd3iv0O4KsN1NKWvkw1SdB+Vm+E0Wa4WbOgRTeQR9LUMp8JP9eUHVBGIEP+RL7ZL2OiUgv7MAlu3+hwP5M01BcjIV/k6xR+VvYaWvWpbFTpPEVfr5qQD8DzA2YKNB6BruSn7rsCHtfQvNc1Hlp0rW2zKXC62P5T9jS37kzUmrjJ0kEGKtLLLiWWXukYZbTfHpX7cFvklWhsJWr1KBtvKdXfTsmF0ypmtoHc3zZzo8DmBAMQMGwxuq+VRt/wKDMf+OAATL5CgpEhquzZcxWfiMb8VnwmJotzEEV/Abyk6PT2ghdHUL3/kzobT9EuWLJppMh/jQbsR6W938M+0gOUHfI4v+SDdjUuefEYbwh1G6LpENGKKXOEzncq+wpicrpPHfIuOwMt8Q47jsu7E0m+2a7QlpH9xm0I5qDeLZL0uD50y2YtvZpvkG+QLeGyBv8PHj2golYDXVhCujekGrjBOydhbdYA23YLu4IDr4HyxyL/DOepnLR3hZYonij9/SFafchk9BgYEKY0xCNBnX6sf7uBmW2Tkl+o4dkptIXm+uE0yuMD6WPNrvT2TZrGtAJsB6q/vYAaLBKks1Yd6cCoVTmuTQ+JCbAQZtbdcZRf5DO3BjU1IWGvxbQHvYVHAeVUTN42WgFSCyKwv4CJ5pHQuFUcZB67W5NcSQV4na+VyJxsm326MqUFbent/jyaTfoOsoeX81R1E4vGZ7VJjjNHbYuIPaOUUSBjnl2mx3mBNVN5OPGBGhlbUIpeFj2M0wxqZG/ss/YVpVF2+pPm7It+uGnl4BUSm/CO715m1arTTG/7o0aCrXKVTYrHCVbqKYyy/RuuiqxwWvYtkk9ST+J//J2uEEpL+wnK5gPRn3tAnQOdAbC++TrOvZLXqyS3ZTBh2cyNUfxC/SExv9Qou+5OBLFtK1BTEcvbAUNIEje09TL880FKTUGkhx4WZ/VlNlAKez+dEdUgWQim9cVbZaMzald885DkCgvZpSEFTXqtSUVQwkBPUbFSFP9J1ymy77YGbDBAJxTzNr7IV2snRdoSOicxphdtJq4KDtz+QfoSoOJjyw/sHXmIX6XqFIHW6KZgDJ6pxdnqVCdc83xWlwYATJGxwnsINHhkry/+VZ/DTo/IShUAq1gbQosnQ7ijV50qbv6wUJ3BoP5YMwc4QjqVIQWdyqWPCgLIcpf8ZUkcGr4A5D34/RTUQH9aGjPgZuaCidbkMbrYbw3WASpI7T0Pqf0AzhMUvTHc1eYn4GxG+Kjj4iCZvSPdW0V+L6krSIqL/+AXv44Me8XGOt/H4Nt6zvI33lMWPt/FsTwe+jZ+iYiyikZMH/vE9JkkhPRJkc+Zv/T2PuCyHZ8Ph0AcjzxuPwzFoFea8iYhBiv3OrR99U/xyEvsZdHQkB4uQD/9hBBd6wOAWK9eT16snpeWVCAzPuPhthhfp/PUjlleNEXQgyESHtICjtJQ89PrxsIe08E+kn6m0lE0ye9Z0hbQATpz2sL3bewA/y+1dpBXaJxb5NM2+qneh2yRTWFDLj73oLn7ULgyWHK+AhhwyYqhaVTHa3vVax2jZMgt6RABUX4UNWBagtbBIN1Okh8Ec/X7dizcCiZ8Pc8AI9PBUt2UP7sXeP13DIBVPBGbd9WLWc+aVvdd9D1718LU35lXDksqX5LAs0uoaHL/Ooij0Rp4/cYGA9sJvj4D2oqFhmsCbmJqip3C9Ll2KZl//TOebB3or7XO72JsiX68vkzkU/Y16M1lO2h4BS7u0CDNBUouOZyEx8UBBqPL013Hyx23/MPRjYEZU3ova+grrbUsnJtalEyv70glvYbI8oLT7VsFqNORVUUfHgQ6FVK+S6pXSbrX0hLc7cahRZXk6sbE9nbStT6EoOFavQU76WKBOlDaok8o+w9P2Ml1AWrh9NK6LCC2dkLWDifgN3iabB7V5uV1WZlGixG4+D6q1eQHvk+1ic5bMv0lqsB23zsuYFqTT2VeVpUso1qwpSaGbIv2SZskC04P1xpFNuC77ppipi8UDGWnLX+UMHIgcVNkRT9SWxBMDW+KJpTXxRG9PPOmyKJ4obYoncodrVWlLyyLmFJKy70W6QRTPN9h3Js8+bpefG/OBPxyLp+Rb7LbGuPZU9DaHZO8sbBWwshOJ1fltN5SYUfpYh/CGMDqQfQj3NXZvIZKwKn6Ndtv36ZeHQ+2pk59xT5USkZD2Ov9+KMpGPytlRRoSwl4W8J+96TrxInSQi3Akrx2Qp4Us/Hwn6EzpDHr4A81+oSfqd2mihR4JywgbyWGxNx/Ds0mA+bgTGzs2kFbb/Xl4qOsF3NceLhhk/IqnqzQ7EMLx2Sx+FoRrETB+mxSLR6TA4qMOYshOSDc880I/DH1s3trxNm4cDMm/SLtcwJlHVmSr1A7rZh/ncNW66afiadeNnp8iuy/gagdE9HdhsqdjbOiQof10234M7adw2jBU5Fh8kd7fb9c7Hova25Ldgj3AhTkm7z60TjkrwbCfDqRlpYJV6MQPF/eHOxeBvTiqPP3eJqVijH+5TBcbWGCTVf8VYkRczwPjfRH3KdZiPFCSr5banTSGIByS67BgJ6Xa08955PBsBHq6XvXDoH047ki5VjPzHXttY8vM4dmo1MZwgs6d1D+vVP6GooKxn30FDPeh66t42k+/NOGpwLySp7vZhKShH5Rk3IfF8nlsKy2rUPXrTuAXtb+7A73QKegdTocGwz3o0HJu1UzcEfTGO94oHBrsDqhEgz0o0XKmxW8e8mK7PpACDX5KBVpCwrgK0rKjWWgIospOs+NaGQ6rhsbjkY4AE2fLBRxQ3wP70PekDKz5upv95wkYK4r9Dow9oNIH9qH0yTkYX8BZ8oh9XHqz1QvbqoOdZqJVTfBxzJ1qAg53TQ7AHq7JZezCgWNuk/V619NYqVeI/qM91iaoVJRA3FY4xg7PorBcwxNn5lsA9nGHr+JvP9VIy185K2sO40W8A4erS5KhCJm2DA6rdlqq7J50UO9wF8zA28MFs5x7VfjyQx239/KA7MmVUAkN40vEiANp9j3fyj13oooEjN9sD0bRn/IiXaRffJfny53QHJSW8OFwx93a80qDgiea1PkLVocqmHe4K3Pg7eHKXMI6cj6aLvN888AGGLHlqfml0b6w3MWlkXhT331ppKJeXL7BmsJVUpBh77Ja9ndh3TKt7rA2Dmg59fZhOVUzjEDeTneqLf8RJRX35W7qQlxas+hcHhLC4QA7lZNH/zWx4ymg8qXCaZB1qwO/SvTRBuPujOcf8Djg7+E4IOUd5mjl8PELcvSAVlN/D1ZTKe9KjhZPt0QPczj3D2gY9fdgGJVxqaV43GQXxWMZS1t9+I6rp3D0lzqaNhumxC4e9zHHWRDZp7V7lkFXDh9TbcQLxTHDGS39kmKqsSlk2N+PSWSeRxKZgHs6Y5LjYvcUMkHUK3+LwwQy4ydLIBNEtqlNdkkfE0S2GUx2TB4TRLbZcVynjrFOibSf1DHWOZKOqWNMUsdItExcmSYAqX4SU4L4x5QgT5IS5PUrUoHt8UkzgrChUo4pQXixOaYEcZUSRIxypkpgIZY7pgRR05TfLY8pQY4pQY4pQY4pQX5euh9TgjyVtB9TgjQH2XAopoI/mq8NzddjXiiO5usGfV6Q+fqYEsQmJcih7lLDvbwrPqYEOWxKkINJS0+XzZ8/JUg4dJsp4pgSRPj4XDIZhMP955wIh04zTvxSKUHGbr1EVGkmxODzx5QgfXjl9kik4pV9LsZjShAN48Lh/jO5hMBpHpeXkhIkBO593H76lCDkXpSQT9yZf8WMIMNw/FNGL3+qjCATUXC6zE8iCj9FRhDhXcSTZQTBJ7j1IFs/DK7Tz0VSPA7OV2j/nJVWqel2tcqLzeAckXCTZwOc0+MUgNM3eQFP6wrVei+t+Kela8R6ME2xl8UpWfqDi3yDaHv6Ft/bPpxi+/Yx9wj5JMrK0+QekeCmaLcUXVtwmV3zj/Bkel0k2eyBqyJfKSzfJCum+llaV7OgWvERxMINJZyJu7AWzauxA29FWz5RrBN20erqNIvm+/fvZ0m59M9m+XIgWRlWy8hwHSkWEt5idKxHEpR/R2Jb+ZWwpP3nFhaPvxOOXf74XyWv/rc3JNz6vSQ7+rMkPPofJenxIiS9463q39YqwSeclS34E6O9QLkb2O0HxjvC894TuncF433BcGewFGpTqVaJtW6HwB9VH0rALCndTGdO/v69Wra/J5gB9z9+J1o/Ifz/zf7GL4CWJjiQQHHXtvW0yaPIPK7TDP43fZuO7Z29lXmz1/1g7Pd85fZcX/d305EhNXZP7E1hi3g46Lz0U+YkUlKSofEt4sBtvkOcCgs6I2n+KcP8aqnJQsdjNrvuTWib8/9kH6/inxGdRUoKRL47DJF/cmEWKckQGVs9+ksyji7gDRXR/vYTX9BVeAIEYQeLyoL62kNUFjUTBf72X0SEvxPMX68VkfX58/dgMa7HfrCPRDFKJrIgSfRz8vduS9nzzkoGtYLr2vBZ6yHjOws3hiD7YPEpUF978JMx4qCaz/2XNOIzWdDRTuv5YHw+XBZK1NceogIZcVCixTtY0Ts5vmkZLEl/2Rulg31E0VehdL+ARIYM1rJOx+L+i/mFsHgf4VRVLO63L/RlsWpXRgo3nE/THxsIs83DDruy8RHmOSccU5xezKxLalKqCb7D9mhM8H2cHp4hwRUSXkZL2OHkuAtyvRqe+b5faqvaoHaacjuongcLa4f62kNYOx0TWxze4ez4gjl8sHQDqK89pBvQMZHhMA6tgpr4nC7SzaPS6RtVuYRw/plGEekjC2deldrF3+l4qQW94VkUqDIP9j9/HHCx7yODuoR1VfDB3sy0uicI9nXr9QzyE3A0JRf9/32YtA+IrD+lxVpGxJqyOHcVDnnUP701QoYzjA7jnWLrB6SRKBppU5eDyZBE8g8dnqIOaK4O9mCu1vCx5vHrJJt/x47bvXm8Y9oEbeYbh6w8oGU63INlWsMuZhwOluyuGenP6KWD/u2mr1rU/XkcHtCuFe7BrtXBR5bP50vssL1TtrmdDgtardCVKoiofEAzVrgHM1YXx9osLdf5z83Ug6WtQX3tIW1NN8/ii+LxT2GEP1e0eqRlHfA2MNrHbaDIoopp7KFcfIrydpbfFvkMv3nTBViurAH0h2P0eo46/eIDAPsXw88yPsDhw/9EvFAcw//Q0i8p/M8xej0t/iyj14fANpD77tHrQ2AbYdx59HrbGOvOoteHwDas+S7R60NgO9Edo9eHXM7rJ4lebzuAPUWvn/QexjF6/cnJTtHrqxBRpfoS45ipZRx79wHsVQqjToe1D1JtEby+HbteGbreOHJ9O3A9G7deHraeD1Sr0Vi0+oppwHo2Xj0frr4RM02w+lj8QVZYfFRJK7WU9EqRbeQCCEtdUTOWqSiVhsLpLEhhIr9WQzrFigVasSN/OMa5fH+jHipDMV6P2JiprmOn6hhoOoaKDlusgYY2c7r4BnrxbeKUbZeLPNkY8U1MKPvT862h7bpe0MrV2pUpwiRRhFGeCMM0EXZZIgyTROhyRLRSREgyRJgmiGjlhzBLDyEJ0aPKAWGaNKL1Zt0oM4QyjQFv++iXF6IzLYQqK4Q6f0PvnBCqJo0yQhgkhDDKB2GZDsIoG4Q6GYRVLgirVBDGmSCkQdn1MdnNQrIbRWSXBmS3sr+oU0AoM0DYJoCwz/9gFhD/5ZNeQWFN2gdV1od+Io9q/sIyLyOwOu+DWdoH86wPv5KMKyjNRvRTXqvo73q6r3osbnrYix7d7ZP+mkdxr2hp61He8HRd8GjudzTXOx23O+zljvndjvnVjniz4/MS0HWxE6hKG93rKK51xPsOxaWO6k6n80rH6kZnh4x+ikua1uyk5Sxzu5BYnuzfYshwx6vKNq3uc1tVAn06I6rrAqpz8dTNCS180wb9VYeAVnpidESFlXLV9rpJw1Vp+lzL5lVGdi58ujJ6ujknhKxpz4IVOEi27W2UJTtwF7ZXUGqWKNigjJduzp5nyh3bu6we3LG9pzLlDuWCGCF970zRRUfvDo7eh1V7XkTuFhDPCoN46GDIvpVTxUPvy1IpMR3KvLHEKGXEMxYNVQx0sxDon+Bylfehp9dzix9p5jwU5cl6QdiCiuWCiJwtCI7u5P6DuDhutkUf6RYu3FROqM9JwIMosBBxKYHid4v8c7J4V+T5N1i6Fh9OVVXPDPjgzBMzXNrvwg7P9tIt2PaUo5ZlNRsa3P45zhDWPmu2THF3imhRvoT6ZkB4D36db9CfUmiWFf+Ur6RYzSfSUPlelwZo+nPLr+EX8czm/PCOjtnmjtl+29R8dMwuSx8ds4+O2a4cs409d3f3y7b23XXulm2r2Dtzywa2J5ZdvLKB7TR3dMr2bE8crn2yJ7YD2I9P9sRWlz/6ZPM+2bzmSLVOhau27D1g5XjH3iIpnxRKfb3Fn5CCVPt3l3+jffo9TIqjx3dbpPfs8b1GosR09mQ+368snb6bFo9Op0en0y5PyRMzX8k+q77clo5Op0en05ftFXZ0On0y0h+dTo9Op7+CjB+dTn/zjl6nVl6nHN5YWa2PXqfwF/I6Pbqd8t96UPoZXhl7e74y9o6Op3aujbY2cHvXRmur89HxlJJu314vqAt3ji/OHU+HZ+EQeCCIJuDF+KB6e3ZC9Z7QC5VLzXwQJ1TvF/RCFdyHDnR9w97XlD+Rod7W/oXkT/TX6zxf1IEz5PZ1sSCQF0R4wXYQT2ewsUSTP3izcIx07kX+/XzGBbMof8RHh7oTTkav1qVNW6XVXuf56mqD75cIzSSCyXV7Lu2ELfFaqr6VJfCBfAZpG2CoLCNv5d+2yxU56pzrP+vGUI7ybYYPWmp7s4TUcZ87JNV9UOVO16jW/O0Y+dgxRs4FtsEbzvUXN8UW62hSBVyml0EDIrUtCQZHCT5K8IuWYO8owUcJftES7B8l+CjBL1qCg6MEHyX4RUtweJTgowS/aAkeHSX4KMEvWoLHRwk+SvCLk+Dq/6tA8tVrp6Ky7ce3D8kaftzOv0CeDNyjgHx1k8lHSj5ON0nROPry365h9oWJxDHiv16tp3n2hasvtP9mWxSwzN1Wl4iYRm632ezhSjU48vVmq2r7A9wUeZYv4ad09vViW3CiwxDgoki4dwuCJZ4naVxdANHXL6f/QRr7T6ZJ6jNMnLBW2MeHNN3qW3kzUYUr+Pdtkm3SNTdwigfkUkhWomn+XZHOq0lepj/g/ON2WT4XacNPWeACInqlmaIIbu4KP8b5lixuUXEmpkRT6OMmX0CKb82tUDzNktWnHLchhchyALJP+CFbNQ+E1gl2gqIPYqq6d3kuccXigKShykDaSHyV/R1Kn4bG0+VqA8kjr3YnJToQfjfDOUdymRcqob7ZPEDFxyp6BddcTB8tfUy+pV8wb6qGXsOErJz3cLFq7sSqJfVfefNaf3g2nHhhBEajaOT7vgeCMWA4M5A1FJcSDgu5jBOowu8G0r8g/gw8nLEelQg8wFBaPnTm2QG+FkcSdbOCmZT2xH+xqNZcV+GmKPtyA19Fvp3jJ8D4V7zSF8LtGetVyniCxmRy9brj0f5DmqVL/AJILswDSacdwwHS4Qx7Dkd8LGU/Hk86HvBk4/Gl4/Geil2BdDj+focTD2QiHleLqb/Q96XivqRMRUY2Vs4BF2Gw3+HgR7wCAxuHk8sfWB/knI0bFUB0SyHOEaXryrTcQvhnWox629StowHYVK6ceLHmWQZ/CWac/vsa6p5AxX8m3yCJTgCLTYp2Y3xZnWZzGRqB6KorfU4ed0p3get8hnca+nCv+pNuStz3+AJuknSB9W60/WMO0YJlgiadIp5XkzQoyeR/0hcstXltkTdbSBzHOxqq37ZV7/kwv68y/BL5zzSb5+2HBZoDFnHQvSlu7xdTxIs5p83yqhIqd5XdLpKZ/Dvx/LlP5hBpKd/a8BNXETrwo/aY8WptU+g9ksoFlszqPabcxT0uo0zd5vmCSoL8WXRZkL4cLP8UIrVqnmqwWub0O3YTB6PNw/p0NGJLYQmr/6jc0OmflQMWKsGn3eGS3WvTHHeEPWrUQu4wpijzNptLkK/qJl8xf0sOiEKbZQl1i0hkcO07iA9A32RqT9PKjVTrq0ugg+CHpPjahApo9fQ+nc9h1j3iphwz7uFZKNBiIBDDTBBOtAutZgRrzRiLPEjwuVflDt+U0J4Nq5LyaIKtL2yYKAJmy3xD3qNwpVpPlUuqiIdOkS8EhFvnTkkp9swkMo3EgpCOipvVQDktReBA/KWVeo3/VZAKWWl6mMJ9kGcvCP2EVPTwfqObYHyHEU9lfjwpz7X6TmRn1epL+8Ta6r91bPXPJlE48Zt/rQWi6g9NFh8GFdaxcrbJUve5xOjWG8Hmk/R5fjUsZeX4Ai0Xjd2OlPkDcXeWbh7L8IWqhSUzITMfNHzsNCWXFOw0J7eGITUpt0pJTbpMKa1puVVO3VrbxOwpi7xWFjE3NZesV7CFsZTVDXfYy9hiMqvZSCxpYjyriqpMaNXnDkMaOzJ1AcaoVlcoI+To9IOyCLspCgWwrl6stP3iuBpqNeZqrTTD1bOXWgCrj3I7YE1WmTWwpoam2Rg/GOYxBg2RSd/a+rm0V4DWTii2c1JpfvhDmXWx1vtOa3s1Md6N8EGzxp3qtd3N/X3zC36ahxupXMoHRp2c+cI//Aq6f7+inKr73akbMDHuZyLMb7xTv5Fhv2AnIrb0GlUvLe7t1K2p0IDdmOeZCgloMW+nbn3Dbr2demmrrIpeRN7tRtPQuNvd+hG3NHU/E5fTGxt2u5uEmKKK75Z3pqDi78Y73xRWfKe889uwEg8kuyAZCrPt+y1Riwf13sof56QbcXwLCzqxKdLKIN8W+R3bztaChjDQViT7922Rf04+pws0VxIGTGxC/H7VxOjjB/ER/tgw6bdFZWVg2FBc0tqoE7+lSg7UtduMil8n2dfyOPcmT4o1VJ6wmoKXaaYuhqb4pUiW+KTwRV2KMIRYzXFgiauMvdgUIbdVuDwSq7Q+vvTNdsO3PYy6yvPNvwJh6GurEC2T7aRjtqS89xymK7hYoLNsGYYMX7iqSp/PZukcCXeyUNcRp1CWuFwkG6xe4/50R6zmgupln6mkUZi5Q5X0gKmafvUiljMCDzgrcBkVjv7FjoXLb1Oa9f4ikKy2QWBbD+IuX0DwA7tLsnm+1LTRberoCsJSG38UBzo+Sktzl1aZaMo/67/qC50LeJ9sFxvRztNAQW3Q116PDITrAeaNtdoZCIsJ84paeQhnY1/efIPFfPtZ3iAx9NZeEtw9BhgP/RCgDThqGkU9kwq36ewrWpHofxbJIyzOsznZItidkEA/Kcy1yniaWLQm6bm8z0JlaWhbfcdNhC1Zz6rWNOE+4zsSPCjPkpIfcM4/OV/fZMSZDtsz1lIe4fLlLiHnTf2dFYdXUcOOD0gIyYq+zGfbtVpoaDlss3udFPyt6pDrD2HtAkktVAxJDEJK7yoNdwE7/DdFfhylidh9CmzXnT2+T/9dTY0/UP95eQN5h7Dh9FO+QmTFLknBxB8FSA/HlnDhpzL5iPAjMYgLv9Xr9CH/znQkZX8Z0mn6iKi95O9838NkDgsuukPkMxOo7s2bq1TM3PIemXVNEufdqlbeMxG7+kU+I1lTHlfQaWNlLIN2cxwlJK3Z1ZvCWZ7NdbTorqfqUTHxxs/lB0RIw+Ct5IKX83C4umlrHnyJMpxXR6ESsjqLlf4UXaWI2N2sOFu+avw0eEZXQdIoOtEQmybeXparZLb5AJlo6kzVipCVI4lkwNUXKflqp1gF4arPapJVBZTEYqOuqMlUldIRiG3ImDT17BCo4M1cEUC9pr1WvrqlplNgDGVFNlrGM1NYSGQDOV98yYt087Bc07ZW8MuXNGE+CU5k2KY+rxxnmvvXJtIb+d58qErWyY1Oy7D1d6gDVinUVRrVlaYbuFqb1hrXtS7Q5ooZblpxUld8ZzHGqBnj44J77aAnV4wJ0ejqTEUyWcnhJa7nQ2uxH9+xzXGtPS5ki2Mg4Xe9BFZJxssAcCEDlFJYXzAl77CuVD4++CMpUqKOm9YHfP0yr4UFl1jdhiXrm4e8mNNoh1I+CiOWnKhidlAyHnGcqH5EWm+GdCmeQZ6TRerVxPqUGjPIp6sNZmt0fDStF9B1g87Qydy0mgJHOvmIZiRjQDVo6cIh45JVYlcuyy2RM9XvN0WWYF2F55jvgmMexTqkty+rO3FDUnoTtm6d2sW0csRWrk0HhpV9uqjfoe0NEtOj3dh90G6h9EEwbcBrN2A7C7/dhCUV/aDdRGl+MW0glIwBh7K1WBmM5MgNNzErH/RsPDzzhuU/Xyha05EuEdaZLm6xXGFhi0XOytZom3ldnRrOQ+SHxDgXCySXaHGD1tKvPuBMRsvPaSaoWoFbVusiXWJ4M98sG33rYXt/vzDeAygKfUiLIi9Mq1EAusuJa7qN5Dd6V1n5hphgLcQeHQiWW+wxXRNJhvQVHVQiWk5X9ZWdlXQbYQYub6NMecULSvWlMgwLAhS6FaBPRbpakEjgpdHIWo7qUVq3QCXKTigmYsfEVEasgtZyxTbxFh11bVR7zc1MLBJVJT7tKSjgWRyoqkH19UA8aIlTfRRAfS15GRs5VjVrHdpa4bzOv1srm/g1gbWq+UlE0U4BkJ8O+EMeIuy15GFG/Q2PVCo+5WBUsILODBzLql/xhT+22vKsHLtg5chvTsAFRBthJYeGZB5R3tRezHisJIasaQuhuGRNK1KcImQEptXGzTFpaV6LYtPVunzPZFwz4obpGVYbD9lhGtcC4jCNa3rcMH3Taj47TONagThM32J5Nk/1GwlvfmslICfzkSqWJ5p3CnF1PQX+Q1W1LvCfHQW8rhY8ZQs1dVRXsoNm2ipKgF6UUEz1OdGilXfCgBheH2KAZ0+KbrFgf6LriAd8hXrSgvUONUalCre2sPos9fCI/uA3tomLjS2ggGZn2gooot3BFdyQ46ap+hk0u2GCox+YHt2CsNmEzU3lAd0ABaOBvhbd/ywtJgHdAs9nM2is1Qd0/0NntjQ3VSxCuv+JRl99NboBTh/Se+NaHkv/2onStHKjQeGgF6a1ApEN5TyvsllB7kZN2wnl7VzAVjudG6tgTmWf0jNrQWbJqcSdfgra3/jwQxO2AGt/Yf1JY9EsxDlFxaUYNtcpY7ZNImuymajM9dhcgCRGrtE3QlF/ZzsjfJcp8wK40VMZdprhIS9yAXk+BYTz1Qpmc3KOMbVFNvduEJ1vIc1PZtMGYxLKN4StplqyT1HiKvsGC3xGMq0aUKS42y6M1fKAAkXNWeOaHo9MwGKF1e5jtB9CXn7TOynfRl3ALwVU6KY3s03yre0EROtyK2rE16X0lTeNafhxu/wsu10nGCGsA147Ui4ufL+Cp0oJxVMCn3u5RVEvlYdkJRjJgJMbbY/ZJ1AXZXo7043XoxJgcR3uMScl4zpBPx3Go5vChzSzUQ48iiAfkh9WFcecLiK56O1eG5gR1/AbXDQcbIpdLvKkPttJ5UtWtEnZMjwbhtVFwTjsquYx1UBVC3TW8tlaVWejrkoBU0lykyGvFLKVOsc1Ykr71WS4F3LSWmO2VhCRf0FXpQlTKRgakiBiK5U9TSagk7WMGJx10gCwkhCGpkQArCSMyvnwubXk1VhRGJVTGo+8zmqsMIwiY0qw4tAt3ICVh4mxPABWICahMSlYkZhExqRghSIyFgqvEQpuV25DS8zCvsxbR+4l0McToYZg2X4c1zBL9WJOc+agVGot5vbHetOEcC7smU48gF7iboR6tDzONY4VqFPbuhHTb2+3CtSvbV3QHALLuFvX6TK1OfqRi3BBiPlL+P5izPCA3tuP+Mqt7z5fXzwI+kLn+oMiR5T2mRAro8yKqX4k87lMF+jsKiymTm8tYQW/WSTrNZQpNU1uOS9ogLJl2ZRXiCwrhEPbCoqMd+oKnm0F37ZCYFshtK0wsq0wtq1gy+lQyel4IBGw+KLYLm8b3zfAPpguj3+qMMwDmdBX37ABV7ocOl3hWEOKPGJJzBuHeK2W2J4k4Xw7JyMZMflUPpflPajjwXVK4gyhP+LBORr2hgQW+dd/+f+dPeXLJ8oBAA==';
+
+    // Decode and decompress part 1 (ends with <Events>)
+    const binaryStr1 = atob(templateP1B64);
+    const bytes1 = new Uint8Array(binaryStr1.length);
+    for (let i = 0; i < binaryStr1.length; i++) {
+      bytes1[i] = binaryStr1.charCodeAt(i);
+    }
+    const xmlPart1 = pako.ungzip(bytes1, { to: 'string' });
+
+    // Decode and decompress part 2 (starts with </Events>)
+    const binaryStr2 = atob(templateP2B64);
+    const bytes2 = new Uint8Array(binaryStr2.length);
+    for (let i = 0; i < binaryStr2.length; i++) {
+      bytes2[i] = binaryStr2.charCodeAt(i);
+    }
+    const xmlPart2 = pako.ungzip(bytes2, { to: 'string' });
+
+    // Combine: part1 + clips + part2
+    const newXml = xmlPart1 + clipsXML + '\n\t\t\t\t\t\t\t\t\t\t' + xmlPart2;
+
+    // Compress and download
+    const newCompressed = pako.gzip(newXml);
+    const blob = new Blob([newCompressed], { type: 'application/octet-stream' });
+    const filename = `${arr.artist} - ${arr.title}.als`.replace(/[<>:"/\\|?*]/g, '_');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    showToast(t('alsExported'));
+  } catch (err) {
+    console.error('ALS export error:', err, err.message, err.stack);
+    alert('Errore: ' + err.message);
+    showToast(t('alsError'));
+  }
+}
+
+function escapeXml(str) {
+  return str ? str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;') : '';
+}
+
+function importArrangementALS(file) {
+  if (!currentUser) {
+    showAuthModal();
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      // Decompress gzip
+      const compressed = new Uint8Array(e.target.result);
+      let xmlStr;
+      try {
+        xmlStr = pako.ungzip(compressed, { to: 'string' });
+      } catch {
+        // Maybe it's not compressed (rare but possible)
+        xmlStr = new TextDecoder().decode(compressed);
+      }
+
+      // Parse XML
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlStr, 'text/xml');
+
+      // Find STRUCTURE track
+      const tracks = xmlDoc.querySelectorAll('MidiTrack, AudioTrack');
+      let structureTrack = null;
+      for (const track of tracks) {
+        const nameEl = track.querySelector('Name > EffectiveName, Name > UserName');
+        if (nameEl) {
+          const name = nameEl.getAttribute('Value');
+          if (name && name.toUpperCase() === 'STRUCTURE') {
+            structureTrack = track;
+            break;
+          }
+        }
+      }
+
+      if (!structureTrack) {
+        showToast(t('noStructureTrack'));
+        return;
+      }
+
+      // Get clips from ArrangerAutomation (arrangement view) or ClipSlotList (session view)
+      const clips = [];
+
+      // Try arrangement view first
+      const arrangerClips = structureTrack.querySelectorAll('ArrangerAutomation > Events > MidiClip, ArrangerAutomation > Events > AudioClip');
+      if (arrangerClips.length > 0) {
+        arrangerClips.forEach(clip => {
+          const nameEl = clip.querySelector('Name');
+          const startEl = clip.querySelector('CurrentStart');
+          const endEl = clip.querySelector('CurrentEnd');
+          if (nameEl && startEl && endEl) {
+            const name = nameEl.getAttribute('Value') || '';
+            const start = parseFloat(startEl.getAttribute('Value')) || 0;
+            const end = parseFloat(endEl.getAttribute('Value')) || 0;
+            const lengthBeats = end - start;
+            const bars = lengthBeats / 4; // 4 beats per bar
+            clips.push({ name, start, bars });
+          }
+        });
+      }
+
+      // Sort clips by start position
+      clips.sort((a, b) => a.start - b.start);
+
+      if (clips.length === 0) {
+        showToast(t('noSections'));
+        return;
+      }
+
+      // Convert clips to sections
+      const sections = clips.map(clip => {
+        const cleanName = clip.name.trim();
+        const sectionType = nameToSectionType[cleanName.toLowerCase()] || 'verse';
+        return {
+          type: sectionType,
+          bars: clip.bars,
+          notes: cleanName !== sectionTypeNames[sectionType] ? cleanName : ''
+        };
+      });
+
+      // Extract filename as title
+      const fileName = file.name.replace(/\.als$/i, '');
+      let title = fileName;
+      let artist = 'Unknown Artist';
+
+      // Try to parse "Artist - Title" format
+      if (fileName.includes(' - ')) {
+        const parts = fileName.split(' - ');
+        artist = parts[0].trim();
+        title = parts.slice(1).join(' - ').trim();
+      }
+
+      // Create arrangement
+      const arr = getDB('arrangements');
+      arr.unshift({
+        id: Date.now(),
+        title,
+        artist,
+        album: '',
+        cover: '',
+        sections,
+        userId: currentUser.id
+      });
+      setDB('arrangements', arr);
+      renderArrangements();
+      showToast(t('alsImported'));
+    } catch (err) {
+      console.error('ALS import error:', err);
+      showToast(t('alsError'));
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function handleALSImport(event) {
+  const file = event.target.files[0];
+  if (file) {
+    importArrangementALS(file);
+  }
+  event.target.value = '';
+}
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+function init() {
+  loadCurrentUser();
+  applyI18n();
+  renderSection('music');
+  renderSection('creative');
+  showSection('music');
+}
+init();
+</script>
+</body>
+</html>
